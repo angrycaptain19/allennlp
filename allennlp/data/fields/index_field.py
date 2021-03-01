@@ -47,8 +47,7 @@ class IndexField(Field[torch.Tensor]):
     @overrides
     def as_tensor(self, padding_lengths: Dict[str, int]) -> torch.Tensor:
 
-        tensor = torch.LongTensor([self.sequence_index])
-        return tensor
+        return torch.LongTensor([self.sequence_index])
 
     @overrides
     def empty_field(self):

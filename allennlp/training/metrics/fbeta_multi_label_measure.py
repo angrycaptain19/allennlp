@@ -165,14 +165,12 @@ class FBetaMultiLabelMeasure(FBetaMeasure):
     def _true_negative_sum(self):
         if self._total_sum is None:
             return None
-        else:
-            true_negative_sum = (
+        return (
                 self._total_sum[0] / self._true_positive_sum.size(0)
                 - self._pred_sum
                 - self._true_sum
                 + self._true_positive_sum
             )
-            return true_negative_sum
 
 
 @Metric.register("f1_multi_label")

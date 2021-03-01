@@ -229,9 +229,10 @@ class TestElmo(ElmoTestCase):
             [["1", "2", "3", "4", "50", "60", "70"], ["The"]],
         ]
 
-        all_character_ids = []
-        for batch_sentences in sentences:
-            all_character_ids.append(self._sentences_to_ids(batch_sentences))
+        all_character_ids = [
+            self._sentences_to_ids(batch_sentences)
+            for batch_sentences in sentences
+        ]
 
         # (2, 3, 7, 50)
         character_ids = torch.cat([ids.unsqueeze(1) for ids in all_character_ids], dim=1)

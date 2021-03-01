@@ -83,7 +83,7 @@ def _cached_path(args: argparse.Namespace):
     elif args.remove:
         from allennlp.common.util import format_size
 
-        if args.extract_archive or args.force_extract or args.inspect:
+        if args.extract_archive or args.force_extract:
             raise RuntimeError(
                 "cached-path cannot accept --extract-archive, --force-extract, or --inspect "
                 "options when --remove flag is used."

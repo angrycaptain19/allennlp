@@ -12,13 +12,9 @@ class TestBiMPMMatching(AllenNlpTestCase):
         seq_len1 = torch.randint(low=len1 - 10, high=len1 + 1, size=(batch,)).long()
         seq_len2 = torch.randint(low=len2 - 10, high=len2 + 1, size=(batch,)).long()
 
-        mask1 = []
-        for w in seq_len1:
-            mask1.append([1] * w.item() + [0] * (len1 - w.item()))
+        mask1 = [[1] * w.item() + [0] * (len1 - w.item()) for w in seq_len1]
         mask1 = torch.tensor(mask1, dtype=torch.bool)
-        mask2 = []
-        for w in seq_len2:
-            mask2.append([1] * w.item() + [0] * (len2 - w.item()))
+        mask2 = [[1] * w.item() + [0] * (len2 - w.item()) for w in seq_len2]
         mask2 = torch.tensor(mask2, dtype=torch.bool)
 
         d = 200  # hidden dimension

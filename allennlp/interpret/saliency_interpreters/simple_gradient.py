@@ -22,7 +22,7 @@ class SimpleGradient(SaliencyInterpreter):
         """
         labeled_instances = self.predictor.json_to_labeled_instances(inputs)
 
-        instances_with_grads = dict()
+        instances_with_grads = {}
         for idx, instance in enumerate(labeled_instances):
             # List of embedding inputs, used for multiplying gradient by the input for normalization
             embeddings_list: List[torch.Tensor] = []

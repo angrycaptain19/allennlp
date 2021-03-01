@@ -43,9 +43,9 @@ class Embeddings(TransformerModule, FromParams):
 
     def forward(self, *inputs) -> torch.Tensor:
         assert len(inputs) == len(self.embeddings)
-        outputs = []
-        for i, layer in enumerate(self.embeddings.children()):
-            outputs.append(layer(inputs[i]))
+        outputs = [
+            layer(inputs[i]) for i, layer in enumerate(self.embeddings.children())
+        ]
 
         outputs = sum(outputs)  # type: ignore
         outputs = self.layer_norm(outputs)
@@ -192,14 +192,17 @@ class TransformerEmbeddings(Embeddings):
     ):
         submodules = cls._get_mapped_submodules(pretrained_module, source, mapping)
 
-        final_kwargs = {}
+        final_kwargs = {
+            "vocab_size": submodules["embeddings.word_embeddings"].num_embeddings,
+            "embedding_size": submodules[
+                "embeddings.word_embeddings"
+            ].embedding_dim,
+            "pad_token_id": submodules["embeddings.word_embeddings"].padding_idx,
+            "max_position_embeddings": submodules[
+                "embeddings.position_embeddings"
+            ].num_embeddings,
+        }
 
-        final_kwargs["vocab_size"] = submodules["embeddings.word_embeddings"].num_embeddings
-        final_kwargs["embedding_size"] = submodules["embeddings.word_embeddings"].embedding_dim
-        final_kwargs["pad_token_id"] = submodules["embeddings.word_embeddings"].padding_idx
-        final_kwargs["max_position_embeddings"] = submodules[
-            "embeddings.position_embeddings"
-        ].num_embeddings
 
         if "embeddings.token_type_embeddings" in submodules:
             final_kwargs["type_vocab_size"] = submodules[

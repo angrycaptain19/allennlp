@@ -79,10 +79,10 @@ class Instance(Mapping[str, Field]):
         Returns a dictionary of padding lengths, keyed by field name.  Each `Field` returns a
         mapping from padding keys to actual lengths, and we just key that dictionary by field name.
         """
-        lengths = {}
-        for field_name, field in self.fields.items():
-            lengths[field_name] = field.get_padding_lengths()
-        return lengths
+        return {
+            field_name: field.get_padding_lengths()
+            for field_name, field in self.fields.items()
+        }
 
     def as_tensor_dict(
         self, padding_lengths: Dict[str, Dict[str, int]] = None
@@ -96,10 +96,10 @@ class Instance(Mapping[str, Field]):
         sizes of the tensors to create.
         """
         padding_lengths = padding_lengths or self.get_padding_lengths()
-        tensors = {}
-        for field_name, field in self.fields.items():
-            tensors[field_name] = field.as_tensor(padding_lengths[field_name])
-        return tensors
+        return {
+            field_name: field.as_tensor(padding_lengths[field_name])
+            for field_name, field in self.fields.items()
+        }
 
     def __str__(self) -> str:
         base_string = "Instance with fields:\n"

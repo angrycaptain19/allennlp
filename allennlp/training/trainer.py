@@ -72,11 +72,7 @@ class Trainer(Registrable):
         if cuda_device is None:
             from torch import cuda
 
-            if cuda.device_count() > 0:
-                cuda_device = 0
-            else:
-                cuda_device = -1
-
+            cuda_device = 0 if cuda.device_count() > 0 else -1
         check_for_gpu(cuda_device)
         self._serialization_dir = serialization_dir
 
@@ -336,7 +332,13 @@ class ConsoleLoggerCallback(TrainerCallback):
                 self._log_fields(val, key)
             elif isinstance(val, torch.Tensor):
                 torch.set_printoptions(threshold=2)
-                logger.info("%s (Shape: %s)\n%s", key, " x ".join([str(x) for x in val.shape]), val)
+                logger.info(
+                    "%s (Shape: %s)\n%s",
+                    key,
+                    " x ".join(str(x) for x in val.shape),
+                    val,
+                )
+
                 torch.set_printoptions(threshold=1000)
             elif isinstance(val, List):
                 logger.info('Field : "%s" : (Length %d of type "%s")', key, len(val), type(val[0]))
@@ -672,15 +674,15 @@ class GradientDescentTrainer(Trainer):
         Returns the norm of the gradients.
         """
         parameters_to_clip = [p for p in self.model.parameters() if p.grad is not None]
-        if self._grad_norm:
-            if self._scaler is not None:
-                # Need to first unscale gradients in order to clip as usual.
-                self._scaler.unscale_(self.optimizer)
-            return clip_grad_norm_(parameters_to_clip, self._grad_norm)
-        else:
+        if not self._grad_norm:
             return torch.norm(
                 torch.stack([torch.norm(p.grad.detach()) for p in parameters_to_clip])
             )
+
+        if self._scaler is not None:
+            # Need to first unscale gradients in order to clip as usual.
+            self._scaler.unscale_(self.optimizer)
+        return clip_grad_norm_(parameters_to_clip, self._grad_norm)
 
     def batch_outputs(self, batch: TensorDict, for_training: bool) -> Dict[str, torch.Tensor]:
         """
@@ -1309,11 +1311,7 @@ class GradientDescentTrainer(Trainer):
         if cuda_device is None:
             from torch import cuda
 
-            if cuda.device_count() > 0:
-                cuda_device = 0
-            else:
-                cuda_device = -1
-
+            cuda_device = 0 if cuda.device_count() > 0 else -1
         check_for_gpu(cuda_device)
         if cuda_device >= 0:
             # Moving model to GPU here so that the optimizer state gets constructed on

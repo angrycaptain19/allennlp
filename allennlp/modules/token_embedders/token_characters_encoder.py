@@ -24,10 +24,7 @@ class TokenCharactersEncoder(TokenEmbedder):
         super().__init__()
         self._embedding = TimeDistributed(embedding)
         self._encoder = TimeDistributed(encoder)
-        if dropout > 0:
-            self._dropout = torch.nn.Dropout(p=dropout)
-        else:
-            self._dropout = lambda x: x
+        self._dropout = torch.nn.Dropout(p=dropout) if dropout > 0 else (lambda x: x)
 
     def get_output_dim(self) -> int:
         return self._encoder._module.get_output_dim()

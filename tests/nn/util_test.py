@@ -954,7 +954,7 @@ class TestNnUtil(AllenNlpTestCase):
             ft = (1 - pt) ** gamma
             correct_loss += -pt.log() * ft
         # Average over sequence.
-        correct_loss = correct_loss / length
+        correct_loss /= length
         numpy.testing.assert_array_almost_equal(loss.data.numpy(), correct_loss.data.numpy())
 
     def test_sequence_cross_entropy_with_logits_alpha_float_correctly(self):
@@ -975,13 +975,10 @@ class TestNnUtil(AllenNlpTestCase):
         for logit, label in zip(tensor.squeeze(0), targets.squeeze(0)):
             logp = torch.nn.functional.log_softmax(logit, dim=-1)
             logpt = logp[label]
-            if label:
-                at = alpha
-            else:
-                at = 1 - alpha
+            at = alpha if label else 1 - alpha
             correct_loss += -logpt * at
         # Average over sequence.
-        correct_loss = correct_loss / length
+        correct_loss /= length
         numpy.testing.assert_array_almost_equal(loss.data.numpy(), correct_loss.data.numpy())
 
     def test_sequence_cross_entropy_with_logits_alpha_single_float_correctly(self):
@@ -1003,13 +1000,10 @@ class TestNnUtil(AllenNlpTestCase):
         for logit, label in zip(tensor.squeeze(0), targets.squeeze(0)):
             logp = torch.nn.functional.log_softmax(logit, dim=-1)
             logpt = logp[label]
-            if label:
-                at = alpha
-            else:
-                at = 1 - alpha
+            at = alpha if label else 1 - alpha
             correct_loss += -logpt * at
         # Average over sequence.
-        correct_loss = correct_loss / length
+        correct_loss /= length
         numpy.testing.assert_array_almost_equal(loss.data.numpy(), correct_loss.data.numpy())
 
     def test_sequence_cross_entropy_with_logits_alpha_list_correctly(self):
@@ -1031,7 +1025,7 @@ class TestNnUtil(AllenNlpTestCase):
             at = alpha[label]
             correct_loss += -logpt * at
         # Average over sequence.
-        correct_loss = correct_loss / length
+        correct_loss /= length
         numpy.testing.assert_array_almost_equal(loss.data.numpy(), correct_loss.data.numpy())
 
     def test_replace_masked_values_replaces_masked_values_with_finite_value(self):
@@ -1699,8 +1693,9 @@ class TestNnUtil(AllenNlpTestCase):
         vocab = Vocabulary()
         vocab.add_tokens_to_namespace(string_tokens, "tokens")
         vocab.add_tokens_to_namespace(
-            set([char for token in string_tokens for char in token]), "token_characters"
+            {char for token in string_tokens for char in token}, "token_characters"
         )
+
         elmo_indexer = ELMoTokenCharactersIndexer()
         token_chars_indexer = TokenCharactersIndexer()
         single_id_indexer = SingleIdTokenIndexer()

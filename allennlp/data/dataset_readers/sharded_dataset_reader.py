@@ -76,5 +76,4 @@ class ShardedDatasetReader(DatasetReader):
 
         for shard in self.shard_iterable(shards):
             logger.info(f"reading instances from {shard}")
-            for instance in self.reader.read(shard):
-                yield instance
+            yield from self.reader.read(shard)

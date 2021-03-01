@@ -161,7 +161,6 @@ class CnnEncoder(Seq2VecEncoder):
         maxpool_output[maxpool_output == min_value_of_dtype(maxpool_output.dtype)] = 0.0
 
         if self.projection_layer:
-            result = self.projection_layer(maxpool_output)
+            return self.projection_layer(maxpool_output)
         else:
-            result = maxpool_output
-        return result
+            return maxpool_output

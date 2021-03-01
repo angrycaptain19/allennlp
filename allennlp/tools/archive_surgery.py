@@ -60,11 +60,7 @@ def main():
     archive_file = cached_path(args.input_file)
     if not os.path.exists(archive_file):
         raise ValueError("input file doesn't exist")
-    if args.inplace:
-        output_file = archive_file
-    else:
-        output_file = args.output_file
-
+    output_file = archive_file if args.inplace else args.output_file
     # Extract archive to temp dir
     tempdir = tempfile.mkdtemp()
     with tarfile.open(archive_file, "r:gz") as archive:

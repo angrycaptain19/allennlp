@@ -69,8 +69,7 @@ class Predictor(Registrable):
         instance = self._json_to_instance(inputs)
         self._dataset_reader.apply_token_indexers(instance)
         outputs = self._model.forward_on_instance(instance)
-        new_instances = self.predictions_to_labeled_instances(instance, outputs)
-        return new_instances
+        return self.predictions_to_labeled_instances(instance, outputs)
 
     def get_gradients(self, instances: List[Instance]) -> Tuple[Dict[str, Any], Dict[str, Any]]:
         """
@@ -305,10 +304,7 @@ class Predictor(Registrable):
         if the instances have some dependency on each other, this method should be overridden
         directly.
         """
-        instances = []
-        for json_dict in json_dicts:
-            instances.append(self._json_to_instance(json_dict))
-        return instances
+        return [self._json_to_instance(json_dict) for json_dict in json_dicts]
 
     @classmethod
     def from_path(

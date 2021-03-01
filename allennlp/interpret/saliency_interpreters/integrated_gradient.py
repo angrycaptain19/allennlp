@@ -22,7 +22,7 @@ class IntegratedGradient(SaliencyInterpreter):
         # Convert inputs to labeled instances
         labeled_instances = self.predictor.json_to_labeled_instances(inputs)
 
-        instances_with_grads = dict()
+        instances_with_grads = {}
         for idx, instance in enumerate(labeled_instances):
             # Run integrated gradients
             grads = self._integrate_gradients(instance)

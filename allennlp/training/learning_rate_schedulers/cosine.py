@@ -81,11 +81,16 @@ class CosineWithRestarts(LearningRateScheduler):
         base_lrs = [lr * self.eta_mul ** self._n_restarts for lr in self.base_values]
         self._cycle_len = int(self.t_initial * self.t_mul ** self._n_restarts)
 
-        lrs = [
+        return [
             self.eta_min
             + ((lr - self.eta_min) / 2)
-            * (np.cos(np.pi * (self._cycle_counter % self._cycle_len) / self._cycle_len) + 1)
+            * (
+                np.cos(
+                    np.pi
+                    * (self._cycle_counter % self._cycle_len)
+                    / self._cycle_len
+                )
+                + 1
+            )
             for lr in base_lrs
         ]
-
-        return lrs

@@ -91,11 +91,7 @@ class LogWriter(FromParams):
 
     @staticmethod
     def _item(value: Any):
-        if hasattr(value, "item"):
-            val = value.item()
-        else:
-            val = value
-        return val
+        return value.item() if hasattr(value, "item") else value
 
     def reset_epoch(self) -> None:
         self._cumulative_batch_group_size = 0
@@ -228,31 +224,32 @@ class LogWriter(FromParams):
         Send the mean and std of all parameters and gradients to tensorboard, as well
         as logging the average gradient norm.
         """
-        if self._should_log_parameter_statistics:
-            # Log parameter values to TensorBoard
-            for name, param in model.named_parameters():
-                if param.data.numel() > 0:
-                    self.add_train_scalar("parameter_mean/" + name, param.data.mean().item())
-                if param.data.numel() > 1:
-                    self.add_train_scalar("parameter_std/" + name, param.data.std().item())
-                if param.grad is not None:
-                    if param.grad.is_sparse:
+        if not self._should_log_parameter_statistics:
+            return
+        # Log parameter values to TensorBoard
+        for name, param in model.named_parameters():
+            if param.data.numel() > 0:
+                self.add_train_scalar("parameter_mean/" + name, param.data.mean().item())
+            if param.data.numel() > 1:
+                self.add_train_scalar("parameter_std/" + name, param.data.std().item())
+            if param.grad is not None:
+                if param.grad.is_sparse:
 
-                        grad_data = param.grad.data._values()
-                    else:
-                        grad_data = param.grad.data
+                    grad_data = param.grad.data._values()
+                else:
+                    grad_data = param.grad.data
 
-                    # skip empty gradients
-                    if torch.prod(torch.tensor(grad_data.shape)).item() > 0:
-                        self.add_train_scalar("gradient_mean/" + name, grad_data.mean())
-                        if grad_data.numel() > 1:
-                            self.add_train_scalar("gradient_std/" + name, grad_data.std())
-                    else:
-                        # no gradient for a parameter with sparse gradients
-                        logger.info("No gradient for %s, skipping logging.", name)
-            # norm of gradients
-            if batch_grad_norm is not None:
-                self.add_train_scalar("gradient_norm", batch_grad_norm)
+                # skip empty gradients
+                if torch.prod(torch.tensor(grad_data.shape)).item() > 0:
+                    self.add_train_scalar("gradient_mean/" + name, grad_data.mean())
+                    if grad_data.numel() > 1:
+                        self.add_train_scalar("gradient_std/" + name, grad_data.std())
+                else:
+                    # no gradient for a parameter with sparse gradients
+                    logger.info("No gradient for %s, skipping logging.", name)
+        # norm of gradients
+        if batch_grad_norm is not None:
+            self.add_train_scalar("gradient_norm", batch_grad_norm)
 
     def log_learning_rates(self, model: Model, optimizer: Optimizer):
         """

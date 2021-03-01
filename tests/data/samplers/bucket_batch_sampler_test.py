@@ -11,9 +11,11 @@ class TestBucketSampler(SamplerTest):
     def test_create_batches_groups_correctly(self):
         sampler = BucketBatchSampler(batch_size=2, padding_noise=0, sorting_keys=["text"])
 
-        grouped_instances = []
-        for indices in sampler.get_batch_indices(self.instances):
-            grouped_instances.append([self.instances[idx] for idx in indices])
+        grouped_instances = [
+            [self.instances[idx] for idx in indices]
+            for indices in sampler.get_batch_indices(self.instances)
+        ]
+
         expected_groups = [
             [self.instances[4], self.instances[2]],
             [self.instances[0], self.instances[1]],

@@ -58,10 +58,7 @@ class PretrainedTransformerTokenizer(Tokenizer):
         stride: int = 0,
         tokenizer_kwargs: Optional[Dict[str, Any]] = None,
     ) -> None:
-        if tokenizer_kwargs is None:
-            tokenizer_kwargs = {}
-        else:
-            tokenizer_kwargs = tokenizer_kwargs.copy()
+        tokenizer_kwargs = {} if tokenizer_kwargs is None else tokenizer_kwargs.copy()
         tokenizer_kwargs.setdefault("use_fast", True)
         # Note: Just because we request a fast tokenizer doesn't mean we get one.
 
@@ -332,8 +329,9 @@ class PretrainedTransformerTokenizer(Tokenizer):
 
             # Did we jump too far?
             non_whitespace_chars_skipped = sum(
-                1 for c in text[text_index:token_start_index] if not c.isspace()
+                not c.isspace() for c in text[text_index:token_start_index]
             )
+
             if non_whitespace_chars_skipped > allowed_skipped_whitespace:
                 # Too many skipped characters. Something is wrong. Ignore this token.
                 token_index += 1

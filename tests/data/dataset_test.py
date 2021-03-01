@@ -60,8 +60,7 @@ class TestDataset(AllenNlpTestCase):
             [Token(t) for t in ["here", "is", "a", "sentence", "."]], self.token_indexer
         )
         field4 = TextField([Token(t) for t in ["this", "is", "short"]], self.token_indexer)
-        instances = [
+        return [
             Instance({"text1": field1, "text2": field2}),
             Instance({"text1": field3, "text2": field4}),
         ]
-        return instances

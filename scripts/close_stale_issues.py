@@ -19,7 +19,10 @@ def main():
             and issue.pull_request is None
             and (dt.utcnow() - issue.updated_at).days > 7
             and (dt.utcnow() - issue.created_at).days >= 14
-            and not any(label.name.lower() in LABELS_TO_EXEMPT for label in issue.get_labels())
+            and all(
+                label.name.lower() not in LABELS_TO_EXEMPT
+                for label in issue.get_labels()
+            )
         ):
             print("Closing", issue)
             issue.create_comment(

@@ -162,11 +162,7 @@ class VilbertBackbone(Backbone):
         # this attention mask is more simple than the triangular masking of
         # causal attention used in OpenAI GPT, we just need to prepare the
         # broadcast dimension here.
-        if attention_mask is not None:
-            extended_attention_mask = attention_mask
-        else:
-            extended_attention_mask = None
-
+        extended_attention_mask = None if attention_mask is None else attention_mask
         extended_image_attention_mask = box_mask
 
         # Shape: (batch_size, feature_size, num_tokens)

@@ -486,11 +486,11 @@ class EmbeddingsFileURI(NamedTuple):
 
 def parse_embeddings_file_uri(uri: str) -> "EmbeddingsFileURI":
     match = re.fullmatch(r"\((.*)\)#(.*)", uri)
-    if match:
-        fields = cast(Tuple[str, str], match.groups())
-        return EmbeddingsFileURI(*fields)
-    else:
+    if not match:
         return EmbeddingsFileURI(uri, None)
+
+    fields = cast(Tuple[str, str], match.groups())
+    return EmbeddingsFileURI(*fields)
 
 
 class EmbeddingsTextFile(Iterator[str]):

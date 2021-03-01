@@ -7,9 +7,6 @@ from allennlp.modules.seq2seq_encoders import PytorchTransformer
 
 @pytest.mark.parametrize("positional_encoding", [None, "sinusoidal", "embedding"])
 def test_positional_embeddings(positional_encoding: Optional[str]):
-    # All sizes are prime, making them easy to find during debugging.
-    batch_size = 7
-    max_seq_len = 101
     n_head = 5
     dims = 11 * n_head
     transformer = PytorchTransformer(
@@ -18,6 +15,9 @@ def test_positional_embeddings(positional_encoding: Optional[str]):
     transformer.eval()
 
     with torch.no_grad():
+        # All sizes are prime, making them easy to find during debugging.
+        batch_size = 7
+        max_seq_len = 101
         inputs = torch.randn(batch_size, max_seq_len, dims)
         mask = torch.ones(batch_size, max_seq_len, dtype=torch.bool)
         for b in range(batch_size):
@@ -33,9 +33,6 @@ def test_positional_embeddings(positional_encoding: Optional[str]):
 
 @pytest.mark.parametrize("positional_encoding", [None, "sinusoidal", "embedding"])
 def test_positional_encodings(positional_encoding: Optional[str]):
-    # All sizes are prime, making them easy to find during debugging.
-    batch_size = 3
-    max_seq_len = 11
     n_head = 2
     dims = 7 * n_head
     transformer = PytorchTransformer(
@@ -44,6 +41,9 @@ def test_positional_encodings(positional_encoding: Optional[str]):
     transformer.eval()
 
     with torch.no_grad():
+        # All sizes are prime, making them easy to find during debugging.
+        batch_size = 3
+        max_seq_len = 11
         # We test this by running it twice, once with a shuffled sequence. The results should be the same if there
         # is no positional encoding, and different otherwise.
         inputs = torch.randn(batch_size, max_seq_len, dims)
@@ -73,9 +73,6 @@ def test_positional_encodings(positional_encoding: Optional[str]):
 
 @pytest.mark.parametrize("positional_encoding", [None, "sinusoidal", "embedding"])
 def test_mask_works(positional_encoding: Optional[str]):
-    # All sizes are prime, making them easy to find during debugging.
-    batch_size = 3
-    max_seq_len = 11
     n_head = 2
     dims = 7 * n_head
     transformer = PytorchTransformer(
@@ -84,6 +81,9 @@ def test_mask_works(positional_encoding: Optional[str]):
     transformer.eval()
 
     with torch.no_grad():
+        # All sizes are prime, making them easy to find during debugging.
+        batch_size = 3
+        max_seq_len = 11
         # Construct inputs and masks
         inputs = torch.randn(batch_size, max_seq_len, dims)
         all_ones_mask = torch.ones(batch_size, max_seq_len, dtype=torch.bool)

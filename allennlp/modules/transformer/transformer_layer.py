@@ -86,12 +86,13 @@ class AttentionLayer(TransformerModule, FromParams):
     ):
         submodules = cls._get_mapped_submodules(pretrained_module, source, mapping)
 
-        final_kwargs = {}
+        final_kwargs = {
+            "hidden_size": submodules["self.query"].in_features,
+            "num_attention_heads": submodules["self"].num_attention_heads,
+            "attention_dropout": submodules["self.dropout"].p,
+            "hidden_dropout": submodules["output.dropout"].p,
+        }
 
-        final_kwargs["hidden_size"] = submodules["self.query"].in_features
-        final_kwargs["num_attention_heads"] = submodules["self"].num_attention_heads
-        final_kwargs["attention_dropout"] = submodules["self.dropout"].p
-        final_kwargs["hidden_dropout"] = submodules["output.dropout"].p
 
         final_kwargs.update(**kwargs)
 
@@ -227,13 +228,16 @@ class TransformerLayer(TransformerModule, FromParams):
     ):
         submodules = cls._get_mapped_submodules(pretrained_module, source, mapping)
 
-        final_kwargs = {}
+        final_kwargs = {
+            "hidden_size": submodules["attention.self.query"].in_features,
+            "num_attention_heads": submodules[
+                "attention.self"
+            ].num_attention_heads,
+            "attention_dropout": submodules["attention.self.dropout"].p,
+            "hidden_dropout": submodules["attention.output.dropout"].p,
+            "intermediate_size": submodules["intermediate.dense"].out_features,
+        }
 
-        final_kwargs["hidden_size"] = submodules["attention.self.query"].in_features
-        final_kwargs["num_attention_heads"] = submodules["attention.self"].num_attention_heads
-        final_kwargs["attention_dropout"] = submodules["attention.self.dropout"].p
-        final_kwargs["hidden_dropout"] = submodules["attention.output.dropout"].p
-        final_kwargs["intermediate_size"] = submodules["intermediate.dense"].out_features
 
         # We require the if block as `act_fn` is a function rather than a module,
         # so `_get_mapped_submodules` does not automatically fix this.

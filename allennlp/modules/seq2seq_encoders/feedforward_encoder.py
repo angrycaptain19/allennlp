@@ -45,6 +45,5 @@ class FeedForwardEncoder(Seq2SeqEncoder):
         """
         if mask is None:
             return self._feedforward(inputs)
-        else:
-            outputs = self._feedforward(inputs)
-            return outputs * mask.unsqueeze(dim=-1)
+        outputs = self._feedforward(inputs)
+        return outputs * mask.unsqueeze(dim=-1)

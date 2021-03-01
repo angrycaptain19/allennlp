@@ -28,7 +28,7 @@ class SmoothGradient(SaliencyInterpreter):
         # Convert inputs to labeled instances
         labeled_instances = self.predictor.json_to_labeled_instances(inputs)
 
-        instances_with_grads = dict()
+        instances_with_grads = {}
         for idx, instance in enumerate(labeled_instances):
             # Run smoothgrad
             grads = self._smooth_grads(instance)

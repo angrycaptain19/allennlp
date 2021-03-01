@@ -61,10 +61,7 @@ class UnigramRecall(Metric):
             beams = predictions[i]
             cur_gold = gold_labels[i]
 
-            if mask is not None:
-                masked_gold = cur_gold * mask[i]
-            else:
-                masked_gold = cur_gold
+            masked_gold = cur_gold * mask[i] if mask is not None else cur_gold
             cleaned_gold = [x for x in masked_gold if x not in (0, end_index)]
 
             retval = 0.0

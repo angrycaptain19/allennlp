@@ -130,7 +130,6 @@ class BiModalEncoder(TransformerModule, FromParams):
     ):
         start1 = 0
         start2 = 0
-        count = 0
         all_encoder_layers1 = []
         all_encoder_layers2 = []
 
@@ -138,7 +137,7 @@ class BiModalEncoder(TransformerModule, FromParams):
         _, num_regions, hidden_size2 = embedding2.size()
 
         use_co_attention_mask = False
-        for layer_id2, layer_id1 in zip(self.biattention_id2, self.biattention_id1):
+        for count, (layer_id2, layer_id1) in enumerate(zip(self.biattention_id2, self.biattention_id1)):
             end1 = layer_id1
             end2 = layer_id2
 
@@ -220,8 +219,6 @@ class BiModalEncoder(TransformerModule, FromParams):
 
             start2 = end2
             start1 = end1
-            count += 1
-
             if output_all_encoded_layers:
                 all_encoder_layers1.append(embedding1)
                 all_encoder_layers2.append(embedding2)
@@ -255,18 +252,22 @@ class BiModalEncoder(TransformerModule, FromParams):
         """
         submodules = cls._get_mapped_submodules(pretrained_module, source, mapping)
 
-        final_kwargs = {}
+        final_kwargs = {
+            "num_hidden_layers1": len(submodules["layers1"]),
+            "hidden_size1": submodules[
+                "layers1.0.attention.self.query"
+            ].in_features,
+            "num_attention_heads1": submodules[
+                "layers1.0.attention.self"
+            ].num_attention_heads,
+            "attention_dropout1": submodules["layers1.0.attention.self.dropout"].p,
+            "hidden_dropout1": submodules["layers1.0.attention.output.dropout"].p,
+            "intermediate_size1": submodules[
+                "layers1.0.intermediate.dense"
+            ].out_features,
+            "activation": submodules["layers1.0.intermediate"].intermediate_act_fn,
+        }
 
-        final_kwargs["num_hidden_layers1"] = len(submodules["layers1"])
-
-        final_kwargs["hidden_size1"] = submodules["layers1.0.attention.self.query"].in_features
-        final_kwargs["num_attention_heads1"] = submodules[
-            "layers1.0.attention.self"
-        ].num_attention_heads
-        final_kwargs["attention_dropout1"] = submodules["layers1.0.attention.self.dropout"].p
-        final_kwargs["hidden_dropout1"] = submodules["layers1.0.attention.output.dropout"].p
-        final_kwargs["intermediate_size1"] = submodules["layers1.0.intermediate.dense"].out_features
-        final_kwargs["activation"] = submodules["layers1.0.intermediate"].intermediate_act_fn
 
         final_kwargs.update(**kwargs)
 

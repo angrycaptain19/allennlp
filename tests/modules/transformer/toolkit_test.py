@@ -76,8 +76,9 @@ class TestTransformerToolkit(AllenNlpTestCase):
                 super().__init__()
                 self.embeddings = TransformerEmbeddings.from_pretrained_module("bert-base-uncased")
                 self.separate_transformer = TransformerStack.from_pretrained_module(
-                    "bert-base-uncased", num_hidden_layers=range(0, 8)
+                    "bert-base-uncased", num_hidden_layers=range(8)
                 )
+
                 self.combined_transformer = TransformerStack.from_pretrained_module(
                     "bert-base-uncased",
                     num_hidden_layers=range(8, 12),

@@ -69,7 +69,7 @@ class FBetaMeasure(Metric):
             raise ConfigurationError(f"`average` has to be one of {average_options}.")
         if beta <= 0:
             raise ConfigurationError("`beta` should be >0 in the F-beta score.")
-        if labels is not None and len(labels) == 0:
+        if labels is not None and not labels:
             raise ConfigurationError("`labels` cannot be an empty list.")
         self._beta = beta
         self._average = average
@@ -189,10 +189,9 @@ class FBetaMeasure(Metric):
         if self._true_positive_sum is None:
             raise RuntimeError("You never call this metric before.")
 
-        else:
-            tp_sum = self._true_positive_sum
-            pred_sum = self._pred_sum
-            true_sum = self._true_sum
+        tp_sum = self._true_positive_sum
+        pred_sum = self._pred_sum
+        true_sum = self._true_sum
 
         if self._labels is not None:
             # Retain only selected labels and order them
@@ -246,8 +245,9 @@ class FBetaMeasure(Metric):
     def _true_negative_sum(self):
         if self._total_sum is None:
             return None
-        else:
-            true_negative_sum = (
-                self._total_sum - self._pred_sum - self._true_sum + self._true_positive_sum
-            )
-            return true_negative_sum
+        return (
+            self._total_sum
+            - self._pred_sum
+            - self._true_sum
+            + self._true_positive_sum
+        )

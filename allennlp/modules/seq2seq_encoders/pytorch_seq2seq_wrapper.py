@@ -50,10 +50,7 @@ class PytorchSeq2SeqWrapper(Seq2SeqEncoder):
             self._is_bidirectional = self._module.bidirectional
         except AttributeError:
             self._is_bidirectional = False
-        if self._is_bidirectional:
-            self._num_directions = 2
-        else:
-            self._num_directions = 1
+        self._num_directions = 2 if self._is_bidirectional else 1
 
     @overrides
     def get_input_dim(self) -> int:

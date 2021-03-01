@@ -41,7 +41,7 @@ class SaliencyInterpreter(Registrable):
     def _aggregate_token_embeddings(
         embeddings_list: List[torch.Tensor], token_offsets: List[torch.Tensor]
     ) -> List[numpy.ndarray]:
-        if len(token_offsets) == 0:
+        if not token_offsets:
             return [embeddings.numpy() for embeddings in embeddings_list]
         aggregated_embeddings = []
         # NOTE: This is assuming that embeddings and offsets come in the same order, which may not

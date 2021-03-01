@@ -103,8 +103,7 @@ class MaxTokensBatchSampler(BucketBatchSampler):
 
         batches = [list(group) for group in group_iterator]
         random.shuffle(batches)
-        for batch in batches:
-            yield batch
+        yield from batches
 
     def get_num_batches(self, instances: Sequence[Instance]) -> int:
         # There is no easy way to count the number of batches, so we need to iterate and count.

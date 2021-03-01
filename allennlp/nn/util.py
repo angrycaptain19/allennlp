@@ -58,13 +58,13 @@ def clamp_tensor(tensor, minimum, maximum):
     Returns a tensor with values clamped between the provided minimum and maximum,
     without modifying the original tensor.
     """
-    if tensor.is_sparse:
-        coalesced_tensor = tensor.coalesce()
-
-        coalesced_tensor._values().clamp_(minimum, maximum)
-        return coalesced_tensor
-    else:
+    if not tensor.is_sparse:
         return tensor.clamp(minimum, maximum)
+
+    coalesced_tensor = tensor.coalesce()
+
+    coalesced_tensor._values().clamp_(minimum, maximum)
+    return coalesced_tensor
 
 
 def batch_tensor_dicts(
@@ -515,13 +515,13 @@ def viterbi_decode(
     path_scores = []
     path_indices = []
 
-    if tag_observations[0] != -1:
+    if tag_observations[0] == -1:
+        path_scores.append(tag_sequence[0, :].unsqueeze(0))
+
+    else:
         one_hot = torch.zeros(num_tags)
         one_hot[tag_observations[0]] = 100000.0
         path_scores.append(one_hot.unsqueeze(0))
-    else:
-        path_scores.append(tag_sequence[0, :].unsqueeze(0))
-
     # Evaluate the scores for all possible paths.
     for timestep in range(1, sequence_length):
         # Add pairwise potentials to current scores.
@@ -537,19 +537,23 @@ def viterbi_decode(
         observation = tag_observations[timestep]
         # Warn the user if they have passed
         # invalid/extremely unlikely evidence.
-        if tag_observations[timestep - 1] != -1 and observation != -1:
-            if transition_matrix[tag_observations[timestep - 1], observation] < -10000:
-                logger.warning(
-                    "The pairwise potential between tags you have passed as "
-                    "observations is extremely unlikely. Double check your evidence "
-                    "or transition potentials!"
-                )
-        if observation != -1:
+        if (
+            tag_observations[timestep - 1] != -1
+            and observation != -1
+            and transition_matrix[tag_observations[timestep - 1], observation]
+            < -10000
+        ):
+            logger.warning(
+                "The pairwise potential between tags you have passed as "
+                "observations is extremely unlikely. Double check your evidence "
+                "or transition potentials!"
+            )
+        if observation == -1:
+            path_scores.append(tag_sequence[timestep, :] + scores)
+        else:
             one_hot = torch.zeros(num_tags)
             one_hot[observation] = 100000.0
             path_scores.append(one_hot.unsqueeze(0))
-        else:
-            path_scores.append(tag_sequence[timestep, :] + scores)
         path_indices.append(paths.squeeze())
 
     # Construct the most likely sequence backwards.
@@ -603,10 +607,12 @@ def get_text_field_mask(
 
     If the input `text_field_tensors` contains the "mask" key, this is returned instead of inferring the mask.
     """
-    masks = []
-    for indexer_name, indexer_tensors in text_field_tensors.items():
-        if "mask" in indexer_tensors:
-            masks.append(indexer_tensors["mask"].bool())
+    masks = [
+        indexer_tensors["mask"].bool()
+        for indexer_name, indexer_tensors in text_field_tensors.items()
+        if "mask" in indexer_tensors
+    ]
+
     if len(masks) == 1:
         return masks[0]
     elif len(masks) > 1:
@@ -1302,9 +1308,7 @@ def masked_index_fill(
 
     flattened_target = flattened_target.scatter(0, unmasked_indices, fill_value)
 
-    filled_target = flattened_target.reshape(prev_shape)
-
-    return filled_target
+    return flattened_target.reshape(prev_shape)
 
 
 def masked_index_replace(
@@ -1410,7 +1414,12 @@ def batched_span_select(target: torch.Tensor, spans: torch.LongTensor) -> torch.
     # We also don't want to include span indices which greater than the sequence_length,
     # which happens because some spans near the end of the sequence
     # have a start index + max_batch_span_width > sequence_length, so we add this to the mask here.
-    span_mask = span_mask & (raw_span_indices < target.size(1)) & (0 <= raw_span_indices)
+    span_mask = (
+        span_mask
+        & (raw_span_indices < target.size(1))
+        & (raw_span_indices >= 0)
+    )
+
     span_indices = raw_span_indices * span_mask
 
     # Shape: (batch_size, num_spans, max_batch_span_width, embedding_dim)
@@ -1696,9 +1705,8 @@ def uncombine_initial_dims(tensor: torch.Tensor, original_size: torch.Size) -> t
     """
     if len(original_size) <= 2:
         return tensor
-    else:
-        view_args = list(original_size) + [tensor.size(-1)]
-        return tensor.view(*view_args)
+    view_args = list(original_size) + [tensor.size(-1)]
+    return tensor.view(*view_args)
 
 
 def inspect_parameters(module: torch.nn.Module, quiet: bool = False) -> Dict[str, Any]:
@@ -1827,7 +1835,7 @@ def get_token_offsets_from_text_field_inputs(
 
 def extend_layer(layer: torch.nn.Module, new_dim: int) -> None:
     valid_layers = [torch.nn.Linear, torch.nn.Bilinear]
-    if not any([isinstance(layer, i) for i in valid_layers]):
+    if not any(isinstance(layer, i) for i in valid_layers):
         raise ConfigurationError("Inappropriate layer type")
 
     extend_dim = new_dim - layer.out_features
@@ -2008,7 +2016,7 @@ def tiny_value_of_dtype(dtype: torch.dtype):
     """
     if not dtype.is_floating_point:
         raise TypeError("Only supports floating point dtypes.")
-    if dtype == torch.float or dtype == torch.double:
+    if dtype in [torch.float, torch.double]:
         return 1e-13
     elif dtype == torch.half:
         return 1e-4

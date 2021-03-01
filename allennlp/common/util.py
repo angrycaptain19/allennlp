@@ -137,7 +137,7 @@ def lazy_groups_of(iterable: Iterable[A], group_size: int) -> Iterator[List[A]]:
     iterator = iter(iterable)
     while True:
         s = list(islice(iterator, group_size))
-        if len(s) > 0:
+        if s:
             yield s
         else:
             break
@@ -414,28 +414,28 @@ def peak_gpu_memory() -> Dict[int, int]:
     if not torch.cuda.is_available():
         return {}
 
-    if is_distributed():
-        # If the backend is not 'nccl', we're training on CPU.
-        if dist.get_backend() != "nccl":
-            return {}
-
-        device = torch.cuda.current_device()
-        global_rank = dist.get_rank()
-        world_size = dist.get_world_size()
-        peak_bytes = torch.cuda.max_memory_allocated(device)
-        peak_bytes_tensor = torch.tensor([global_rank, peak_bytes], device=device)
-        # All of these tensors will be gathered into this list.
-        gather_results = [torch.tensor([0, 0], device=device) for _ in range(world_size)]
-
-        dist.all_gather(gather_results, peak_bytes_tensor)
-
-        results_dict: Dict[int, int] = {}
-        for peak_bytes_tensor in gather_results:
-            results_dict[int(peak_bytes_tensor[0])] = int(peak_bytes_tensor[1])
-
-        return results_dict
-    else:
+    if not is_distributed():
         return {0: torch.cuda.max_memory_allocated()}
+
+    # If the backend is not 'nccl', we're training on CPU.
+    if dist.get_backend() != "nccl":
+        return {}
+
+    device = torch.cuda.current_device()
+    global_rank = dist.get_rank()
+    world_size = dist.get_world_size()
+    peak_bytes = torch.cuda.max_memory_allocated(device)
+    peak_bytes_tensor = torch.tensor([global_rank, peak_bytes], device=device)
+    # All of these tensors will be gathered into this list.
+    gather_results = [torch.tensor([0, 0], device=device) for _ in range(world_size)]
+
+    dist.all_gather(gather_results, peak_bytes_tensor)
+
+    results_dict: Dict[int, int] = {}
+    for peak_bytes_tensor in gather_results:
+        results_dict[int(peak_bytes_tensor[0])] = int(peak_bytes_tensor[1])
+
+    return results_dict
 
 
 def ensure_list(iterable: Iterable[A]) -> List[A]:
@@ -515,9 +515,7 @@ def sanitize_wordpiece(wordpiece: str) -> str:
     """
     if wordpiece.startswith("##"):
         return wordpiece[2:]
-    elif wordpiece.startswith("Ġ"):
-        return wordpiece[1:]
-    elif wordpiece.startswith("▁"):
+    elif wordpiece.startswith("Ġ") or wordpiece.startswith("▁"):
         return wordpiece[1:]
     else:
         return wordpiece
@@ -671,7 +669,7 @@ def shuffle_iterable(i: Iterable[T], pool_size: int = 1024) -> Iterable[T]:
             break
 
     # play in it
-    while len(pool) > 0:
+    while pool:
         index = random.randrange(len(pool))
         yield pool[index]
         try:

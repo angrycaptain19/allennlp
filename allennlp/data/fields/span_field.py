@@ -56,8 +56,7 @@ class SpanField(Field[torch.Tensor]):
     @overrides
     def as_tensor(self, padding_lengths: Dict[str, int]) -> torch.Tensor:
 
-        tensor = torch.LongTensor([self.span_start, self.span_end])
-        return tensor
+        return torch.LongTensor([self.span_start, self.span_end])
 
     @overrides
     def empty_field(self):

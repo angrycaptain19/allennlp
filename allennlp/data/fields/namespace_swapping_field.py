@@ -45,8 +45,7 @@ class NamespaceSwappingField(Field[torch.Tensor]):
     def as_tensor(self, padding_lengths: Dict[str, int]) -> torch.Tensor:
         desired_length = padding_lengths["num_tokens"]
         padded_tokens = pad_sequence_to_length(self._mapping_array, desired_length)
-        tensor = torch.LongTensor(padded_tokens)
-        return tensor
+        return torch.LongTensor(padded_tokens)
 
     @overrides
     def empty_field(self) -> "NamespaceSwappingField":
