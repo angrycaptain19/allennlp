@@ -75,17 +75,16 @@ class TransformerModule(torch.nn.Module):
         """
         combined_mapping = self._get_mapping(pretrained_module, source, mapping)
         for name, module in self.named_modules():
-            if name != "":
-                if hasattr(module, "_construct_default_mapping"):
-                    # We handle collisions by giving priority to the outer module's mapping.
-                    combined_mapping = dict(
-                        list(
-                            module._construct_default_mapping(
-                                pretrained_module, source, combined_mapping
-                            ).items()
-                        )
-                        + list(combined_mapping.items())
+            if name != "" and hasattr(module, "_construct_default_mapping"):
+                # We handle collisions by giving priority to the outer module's mapping.
+                combined_mapping = dict(
+                    list(
+                        module._construct_default_mapping(
+                            pretrained_module, source, combined_mapping
+                        ).items()
                     )
+                    + list(combined_mapping.items())
+                )
         return combined_mapping
 
     def _load_from_pretrained_module(
@@ -114,7 +113,8 @@ class TransformerModule(torch.nn.Module):
                 # eg. module.key.anothermodule --> module.val.anothermodule
                 pretrained_name = pretrained_name.replace(key, val)
             if not any(
-                [pretrained_name.startswith(paraname) for paraname in ignore_absent_parameters]
+                pretrained_name.startswith(paraname)
+                for paraname in ignore_absent_parameters
             ):
                 if pretrained_name not in pretrained_parameters:
                     raise ValueError(

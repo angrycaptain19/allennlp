@@ -38,11 +38,7 @@ class ModelCardInfo(FromParams):
         """
         Only the non-empty attributes are returned, to minimize empty values.
         """
-        info = {}
-        for key, val in self.__dict__.items():
-            if val:
-                info[key] = val
-        return info
+        return {key: val for key, val in self.__dict__.items() if val}
 
     def __str__(self):
         display = ""
@@ -324,11 +320,7 @@ class EvaluationData(ModelCardInfo):
         self.preprocessing = preprocessing
 
     def to_dict(self):
-        info = {}
-        for key, val in self.__dict__.items():
-            if val:
-                info["evaluation_" + key] = val
-        return info
+        return {"evaluation_" + key: val for key, val in self.__dict__.items() if val}
 
 
 class TrainingData(ModelCardInfo):
@@ -373,11 +365,7 @@ class TrainingData(ModelCardInfo):
         self.preprocessing = preprocessing
 
     def to_dict(self):
-        info = {}
-        for key, val in self.__dict__.items():
-            if val:
-                info["training_" + key] = val
-        return info
+        return {"training_" + key: val for key, val in self.__dict__.items() if val}
 
 
 @dataclass(frozen=True)

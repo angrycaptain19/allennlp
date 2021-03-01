@@ -38,6 +38,6 @@ class RegularizerApplicator(FromParams):
                 for regex, regularizer in self._regularizers:
                     if re.search(regex, name):
                         penalty = regularizer(parameter)
-                        accumulator = accumulator + penalty
+                        accumulator += penalty
                         break
         return accumulator

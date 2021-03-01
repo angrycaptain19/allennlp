@@ -153,10 +153,7 @@ class RetVal:
             line = f"- {self.description} <br>"
         elif self.ident:
             line = f"- {emphasize(self.ident)}"
-            if self.ty:
-                line += f" : {self.ty} <br>"
-            else:
-                line += " <br>"
+            line += f" : {self.ty} <br>" if self.ty else " <br>"
         else:
             raise DocstringError("RetVal must have either description or ident")
         return line
@@ -284,17 +281,13 @@ class AllenNlpFilterProcessor(Struct):
             if node.name.startswith("_"):
                 if node.name in self.PRIVATE_METHODS_TO_KEEP:
                     return True
-                if (
+                return bool((
                     node.parent
                     and f"{node.parent.name}.{node.name}" in self.PRIVATE_METHODS_TO_KEEP
-                ):
-                    return True
-                return False
+                ))
             if node.parent and node.parent.name.startswith("_"):
                 return False
-            if node.name == "logger" and isinstance(node.parent, Module):
-                return False
-            return True
+            return node.name != "logger" or not isinstance(node.parent, Module)
 
         if not _check(node):
             node.visible = False
@@ -309,9 +302,7 @@ class AllenNlpRenderer(MarkdownRenderer):
         add_method_bar: bool = True,
         include_parent_class: bool = True,
     ) -> str:
-        parts = []
-        for dec in func.decorators:
-            parts.append("@{}{}\n".format(dec.name, dec.args or ""))
+        parts = ["@{}{}\n".format(dec.name, dec.args or "") for dec in func.decorators]
         if self.signature_python_help_style and not func.is_method():
             parts.append("{} = ".format(func.path()))
         if func.is_async:
@@ -364,17 +355,17 @@ class AllenNlpRenderer(MarkdownRenderer):
         else:
             signature = f"{data.name} = {expr}"
 
-        if data.parent and data.parent.is_class():
-            bases = ", ".join(map(str, data.parent.bases))
-            if data.parent.metaclass:
-                bases += ", metaclass=" + str(data.parent.metaclass)
-            if bases:
-                class_signature = f"class {data.parent.name}({bases})"
-            else:
-                class_signature = f"class {data.parent.name}"
-            return f"{class_signature}:\n | ...\n | {signature}"
-        else:
+        if not data.parent or not data.parent.is_class():
             return signature
+
+        bases = ", ".join(map(str, data.parent.bases))
+        if data.parent.metaclass:
+            bases += ", metaclass=" + str(data.parent.metaclass)
+        if bases:
+            class_signature = f"class {data.parent.name}({bases})"
+        else:
+            class_signature = f"class {data.parent.name}"
+        return f"{class_signature}:\n | ...\n | {signature}"
 
     def _format_classdef_signature(self, cls: Class) -> str:
         code = ""
@@ -492,7 +483,7 @@ def parse_args():
 
 def main():
     opts = parse_args()
-    outputs = opts.out if opts.out else [None] * len(opts.modules)
+    outputs = opts.out or [None] * len(opts.modules)
     if len(outputs) != len(opts.modules):
         raise ValueError("Number inputs and outputs should be the same.")
     n_threads = cpu_count()

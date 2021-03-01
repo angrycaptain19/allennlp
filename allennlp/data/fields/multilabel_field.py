@@ -74,7 +74,7 @@ class MultiLabelField(Field[torch.Tensor]):
             if not num_labels:
                 raise ConfigurationError("In order to skip indexing, num_labels can't be None.")
 
-            if not all(cast(int, label) < num_labels for label in labels):
+            if any(cast(int, label) >= num_labels for label in labels):
                 raise ConfigurationError(
                     "All labels should be < num_labels. "
                     "Found num_labels = {} and labels = {} ".format(num_labels, labels)
@@ -89,16 +89,19 @@ class MultiLabelField(Field[torch.Tensor]):
                 )
 
     def _maybe_warn_for_namespace(self, label_namespace: str) -> None:
-        if not (label_namespace.endswith("labels") or label_namespace.endswith("tags")):
-            if label_namespace not in self._already_warned_namespaces:
-                logger.warning(
-                    "Your label namespace was '%s'. We recommend you use a namespace "
-                    "ending with 'labels' or 'tags', so we don't add UNK and PAD tokens by "
-                    "default to your vocabulary.  See documentation for "
-                    "`non_padded_namespaces` parameter in Vocabulary.",
-                    self._label_namespace,
-                )
-                self._already_warned_namespaces.add(label_namespace)
+        if (
+            not label_namespace.endswith("labels")
+            and not label_namespace.endswith("tags")
+            and label_namespace not in self._already_warned_namespaces
+        ):
+            logger.warning(
+                "Your label namespace was '%s'. We recommend you use a namespace "
+                "ending with 'labels' or 'tags', so we don't add UNK and PAD tokens by "
+                "default to your vocabulary.  See documentation for "
+                "`non_padded_namespaces` parameter in Vocabulary.",
+                self._label_namespace,
+            )
+            self._already_warned_namespaces.add(label_namespace)
 
     @overrides
     def count_vocab_items(self, counter: Dict[str, Dict[str, int]]):

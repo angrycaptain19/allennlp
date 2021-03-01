@@ -83,16 +83,19 @@ class SequenceLabelField(Field[torch.Tensor]):
             )
 
     def _maybe_warn_for_namespace(self, label_namespace: str) -> None:
-        if not (self._label_namespace.endswith("labels") or self._label_namespace.endswith("tags")):
-            if label_namespace not in self._already_warned_namespaces:
-                logger.warning(
-                    "Your label namespace was '%s'. We recommend you use a namespace "
-                    "ending with 'labels' or 'tags', so we don't add UNK and PAD tokens by "
-                    "default to your vocabulary.  See documentation for "
-                    "`non_padded_namespaces` parameter in Vocabulary.",
-                    self._label_namespace,
-                )
-                self._already_warned_namespaces.add(label_namespace)
+        if (
+            not self._label_namespace.endswith("labels")
+            and not self._label_namespace.endswith("tags")
+            and label_namespace not in self._already_warned_namespaces
+        ):
+            logger.warning(
+                "Your label namespace was '%s'. We recommend you use a namespace "
+                "ending with 'labels' or 'tags', so we don't add UNK and PAD tokens by "
+                "default to your vocabulary.  See documentation for "
+                "`non_padded_namespaces` parameter in Vocabulary.",
+                self._label_namespace,
+            )
+            self._already_warned_namespaces.add(label_namespace)
 
     # Sequence methods
     def __iter__(self) -> Iterator[Union[str, int]]:
@@ -130,8 +133,7 @@ class SequenceLabelField(Field[torch.Tensor]):
             )
         desired_num_tokens = padding_lengths["num_tokens"]
         padded_tags = pad_sequence_to_length(self._indexed_labels, desired_num_tokens)
-        tensor = torch.LongTensor(padded_tags)
-        return tensor
+        return torch.LongTensor(padded_tags)
 
     @overrides
     def empty_field(self) -> "SequenceLabelField":

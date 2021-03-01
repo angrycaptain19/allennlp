@@ -138,17 +138,19 @@ class TransformerStack(TransformerModule, FromParams):
     ):
         submodules = cls._get_mapped_submodules(pretrained_module, source, mapping)
 
-        final_kwargs = {}
+        final_kwargs = {
+            "num_hidden_layers": len(submodules["layers"]),
+            "hidden_size": submodules["layers.0.attention.self.query"].in_features,
+            "num_attention_heads": submodules[
+                "layers.0.attention.self"
+            ].num_attention_heads,
+            "attention_dropout": submodules["layers.0.attention.self.dropout"].p,
+            "hidden_dropout": submodules["layers.0.attention.output.dropout"].p,
+            "intermediate_size": submodules[
+                "layers.0.intermediate.dense"
+            ].out_features,
+        }
 
-        final_kwargs["num_hidden_layers"] = len(submodules["layers"])
-
-        final_kwargs["hidden_size"] = submodules["layers.0.attention.self.query"].in_features
-        final_kwargs["num_attention_heads"] = submodules[
-            "layers.0.attention.self"
-        ].num_attention_heads
-        final_kwargs["attention_dropout"] = submodules["layers.0.attention.self.dropout"].p
-        final_kwargs["hidden_dropout"] = submodules["layers.0.attention.output.dropout"].p
-        final_kwargs["intermediate_size"] = submodules["layers.0.intermediate.dense"].out_features
 
         # We require the if block as `act_fn` is a function rather than a module,
         # so `_get_mapped_submodules` does not automatically fix this.
@@ -178,9 +180,11 @@ class TransformerStack(TransformerModule, FromParams):
         if num_hidden_layers is not None:
             if isinstance(num_hidden_layers, range):
                 if mapping is None:
-                    mapping = {}
-                    for num_layer, mapped in enumerate(num_hidden_layers):
-                        mapping[str(mapped)] = str(num_layer)
+                    mapping = {
+                        str(mapped): str(num_layer)
+                        for num_layer, mapped in enumerate(num_hidden_layers)
+                    }
+
                 final_kwargs["num_hidden_layers"] = len(num_hidden_layers)
             else:
                 final_kwargs["num_hidden_layers"] = num_hidden_layers

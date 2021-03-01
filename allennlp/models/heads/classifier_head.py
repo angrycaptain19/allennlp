@@ -65,10 +65,7 @@ class ClassifierHead(Head):
         if self._classifier_input_dim is None:
             raise ValueError("No input dimension given!")
 
-        if dropout:
-            self._dropout = torch.nn.Dropout(dropout)
-        else:
-            self._dropout = None
+        self._dropout = torch.nn.Dropout(dropout) if dropout else None
         self._label_namespace = label_namespace
 
         if num_labels:
@@ -129,5 +126,4 @@ class ClassifierHead(Head):
         return output_dict
 
     def get_metrics(self, reset: bool = False) -> Dict[str, float]:
-        metrics = {"accuracy": self._accuracy.get_metric(reset)}
-        return metrics
+        return {"accuracy": self._accuracy.get_metric(reset)}

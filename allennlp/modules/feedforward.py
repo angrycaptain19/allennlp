@@ -84,9 +84,11 @@ class FeedForward(torch.nn.Module, FromParams):
             )
         self._activations = torch.nn.ModuleList(activations)
         input_dims = [input_dim] + hidden_dims[:-1]
-        linear_layers = []
-        for layer_input_dim, layer_output_dim in zip(input_dims, hidden_dims):
-            linear_layers.append(torch.nn.Linear(layer_input_dim, layer_output_dim))
+        linear_layers = [
+            torch.nn.Linear(layer_input_dim, layer_output_dim)
+            for layer_input_dim, layer_output_dim in zip(input_dims, hidden_dims)
+        ]
+
         self._linear_layers = torch.nn.ModuleList(linear_layers)
         dropout_layers = [torch.nn.Dropout(p=value) for value in dropout]
         self._dropout = torch.nn.ModuleList(dropout_layers)

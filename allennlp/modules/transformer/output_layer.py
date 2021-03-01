@@ -18,5 +18,4 @@ class OutputLayer(TransformerModule, FromParams):
     def forward(self, hidden_states, input_tensor):
         dense_output = self.dense(hidden_states)
         dropout_output = self.dropout(dense_output)
-        output = self.layer_norm(dropout_output + input_tensor)
-        return output
+        return self.layer_norm(dropout_output + input_tensor)

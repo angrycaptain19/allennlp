@@ -18,10 +18,7 @@ class ActivationLayer(TransformerModule, FromParams):
     ):
         super().__init__()
         self.dense = torch.nn.Linear(hidden_size, intermediate_size)
-        if isinstance(activation, str):
-            self.act_fn = ACT2FN[activation]
-        else:
-            self.act_fn = activation
+        self.act_fn = ACT2FN[activation] if isinstance(activation, str) else activation
         self.pool = pool
 
     def forward(self, hidden_states):

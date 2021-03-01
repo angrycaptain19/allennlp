@@ -115,8 +115,6 @@ class TextField(SequenceField[TextFieldTensors]):
                 "You must call .index(vocabulary) on a field before calling .as_tensor()"
             )
 
-        tensors = {}
-
         indexer_lengths: Dict[str, Dict[str, int]] = defaultdict(dict)
         for key, value in padding_lengths.items():
             # We want this to crash if the split fails. Should never happen, so I'm not
@@ -124,11 +122,9 @@ class TextField(SequenceField[TextFieldTensors]):
             indexer_name, padding_key = key.split("___")
             indexer_lengths[indexer_name][padding_key] = value
 
-        for indexer_name, indexer in self.token_indexers.items():
-            tensors[indexer_name] = indexer.as_padded_tensor_dict(
+        return {indexer_name: indexer.as_padded_tensor_dict(
                 self._indexed_tokens[indexer_name], indexer_lengths[indexer_name]
-            )
-        return tensors
+            ) for indexer_name, indexer in self.token_indexers.items()}
 
     @overrides
     def empty_field(self):
@@ -147,7 +143,7 @@ class TextField(SequenceField[TextFieldTensors]):
         for tensor_dict in tensor_list:
             for indexer_name, indexer_output in tensor_dict.items():
                 indexer_lists[indexer_name].append(indexer_output)
-        batched_tensors = {
+        return {
             # NOTE(mattg): if an indexer has its own nested structure, rather than one tensor per
             # argument, then this will break.  If that ever happens, we should move this to an
             # `indexer.batch_tensors` method, with this logic as the default implementation in the
@@ -155,23 +151,22 @@ class TextField(SequenceField[TextFieldTensors]):
             indexer_name: util.batch_tensor_dicts(indexer_outputs)
             for indexer_name, indexer_outputs in indexer_lists.items()
         }
-        return batched_tensors
 
     def __str__(self) -> str:
         # Double tab to indent under the header.
         formatted_text = "".join(
             "\t\t" + text + "\n" for text in textwrap.wrap(repr(self.tokens), 100)
         )
-        if self._token_indexers is not None:
-            indexers = {
-                name: indexer.__class__.__name__ for name, indexer in self._token_indexers.items()
-            }
-            return (
-                f"TextField of length {self.sequence_length()} with "
-                f"text: \n {formatted_text} \t\tand TokenIndexers : {indexers}"
-            )
-        else:
+        if self._token_indexers is None:
             return f"TextField of length {self.sequence_length()} with text: \n {formatted_text}"
+
+        indexers = {
+            name: indexer.__class__.__name__ for name, indexer in self._token_indexers.items()
+        }
+        return (
+            f"TextField of length {self.sequence_length()} with "
+            f"text: \n {formatted_text} \t\tand TokenIndexers : {indexers}"
+        )
 
     # Sequence[Token] methods
     def __iter__(self) -> Iterator[Token]:

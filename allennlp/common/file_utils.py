@@ -394,12 +394,11 @@ def _get_s3_resource():
     session = boto3.session.Session()
     if session.get_credentials() is None:
         # Use unsigned requests.
-        s3_resource = session.resource(
+        return session.resource(
             "s3", config=botocore.client.Config(signature_version=botocore.UNSIGNED)
         )
     else:
-        s3_resource = session.resource("s3")
-    return s3_resource
+        return session.resource("s3")
 
 
 @_s3_request
@@ -749,9 +748,7 @@ class LocalCacheResource:
 
     def __exit__(self, exc_type, exc_value, traceback):
         self.file_lock.release()
-        if exc_value is None:
-            return True
-        return False
+        return exc_value is None
 
 
 @dataclass
@@ -831,10 +828,7 @@ def get_from_cache(url: str, cache_dir: Union[str, Path] = None) -> str:
 
     # Get eTag to add to filename, if it exists.
     try:
-        if url.startswith("s3://"):
-            etag = _s3_etag(url)
-        else:
-            etag = _http_etag(url)
+        etag = _s3_etag(url) if url.startswith("s3://") else _http_etag(url)
     except (ConnectionError, EndpointConnectionError):
         # We might be offline, in which case we don't want to throw an error
         # just yet. Instead, we'll try to use the latest cached version of the

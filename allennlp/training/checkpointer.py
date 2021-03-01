@@ -92,59 +92,60 @@ class Checkpointer(Registrable):
         is_best_so_far: bool = False,
         save_model_only=False,
     ) -> None:
-        if self._serialization_dir is not None:
-            with trainer.get_checkpoint_state() as state:
-                model_state, training_states = state
-                model_path = os.path.join(
-                    self._serialization_dir, "model_state_epoch_{}.th".format(epoch)
-                )
-                if not os.path.isfile(model_path):
-                    torch.save(model_state, model_path)
-                if save_model_only:
-                    return
+        if self._serialization_dir is None:
+            return
+        with trainer.get_checkpoint_state() as state:
+            model_state, training_states = state
+            model_path = os.path.join(
+                self._serialization_dir, "model_state_epoch_{}.th".format(epoch)
+            )
+            if not os.path.isfile(model_path):
+                torch.save(model_state, model_path)
+            if save_model_only:
+                return
 
-                training_path = os.path.join(
-                    self._serialization_dir, "training_state_epoch_{}.th".format(epoch)
-                )
-                if not os.path.isfile(training_path):
-                    torch.save({**training_states, "epoch": epoch}, training_path)
+            training_path = os.path.join(
+                self._serialization_dir, "training_state_epoch_{}.th".format(epoch)
+            )
+            if not os.path.isfile(training_path):
+                torch.save({**training_states, "epoch": epoch}, training_path)
 
-            # The main checkpointing logic is now done, this is just shuffling files around, to keep
-            # track of best weights, and to remove old checkpoints, if desired.
-            if is_best_so_far:
-                logger.info(
-                    "Best validation performance so far. Copying weights to '%s/best.th'.",
-                    self._serialization_dir,
-                )
-                shutil.copyfile(model_path, os.path.join(self._serialization_dir, "best.th"))
+        # The main checkpointing logic is now done, this is just shuffling files around, to keep
+        # track of best weights, and to remove old checkpoints, if desired.
+        if is_best_so_far:
+            logger.info(
+                "Best validation performance so far. Copying weights to '%s/best.th'.",
+                self._serialization_dir,
+            )
+            shutil.copyfile(model_path, os.path.join(self._serialization_dir, "best.th"))
 
-            if (
-                self._num_serialized_models_to_keep is not None
-                and self._num_serialized_models_to_keep >= 0
-            ):
-                self._serialized_paths.append((time.time(), model_path, training_path))
-                if len(self._serialized_paths) > self._num_serialized_models_to_keep:
-                    paths_to_remove = self._serialized_paths.pop(0)
-                    # Check to see if we should keep this checkpoint, if it has been longer
-                    # then self._keep_serialized_model_every_num_seconds since the last
-                    # kept checkpoint.
-                    remove_path = True
-                    if self._keep_serialized_model_every_num_seconds is not None:
-                        save_time = paths_to_remove[0]
-                        time_since_checkpoint_kept = (
-                            save_time - self._last_permanent_saved_checkpoint_time
-                        )
-                        if (
-                            time_since_checkpoint_kept
-                            > self._keep_serialized_model_every_num_seconds
-                        ):
-                            # We want to keep this checkpoint.
-                            remove_path = False
-                            self._last_permanent_saved_checkpoint_time = save_time
-                    if remove_path:
-                        for fname in paths_to_remove[1:]:
-                            if os.path.isfile(fname):
-                                os.remove(fname)
+        if (
+            self._num_serialized_models_to_keep is not None
+            and self._num_serialized_models_to_keep >= 0
+        ):
+            self._serialized_paths.append((time.time(), model_path, training_path))
+            if len(self._serialized_paths) > self._num_serialized_models_to_keep:
+                paths_to_remove = self._serialized_paths.pop(0)
+                # Check to see if we should keep this checkpoint, if it has been longer
+                # then self._keep_serialized_model_every_num_seconds since the last
+                # kept checkpoint.
+                remove_path = True
+                if self._keep_serialized_model_every_num_seconds is not None:
+                    save_time = paths_to_remove[0]
+                    time_since_checkpoint_kept = (
+                        save_time - self._last_permanent_saved_checkpoint_time
+                    )
+                    if (
+                        time_since_checkpoint_kept
+                        > self._keep_serialized_model_every_num_seconds
+                    ):
+                        # We want to keep this checkpoint.
+                        remove_path = False
+                        self._last_permanent_saved_checkpoint_time = save_time
+                if remove_path:
+                    for fname in paths_to_remove[1:]:
+                        if os.path.isfile(fname):
+                            os.remove(fname)
 
     def find_latest_checkpoint(self) -> Optional[Tuple[str, str]]:
         """

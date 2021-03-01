@@ -528,22 +528,23 @@ class TrainModel(Registrable):
         return self.trainer.train()
 
     def finish(self, metrics: Dict[str, Any]):
-        if self.evaluation_data_loader is not None and self.evaluate_on_test:
-            logger.info("The model will be evaluated using the best epoch weights.")
-            test_metrics = training_util.evaluate(
-                self.model,
-                self.evaluation_data_loader,
-                cuda_device=self.trainer.cuda_device,
-                batch_weight_key=self.batch_weight_key,
-            )
+        if self.evaluation_data_loader is not None:
+            if self.evaluate_on_test:
+                logger.info("The model will be evaluated using the best epoch weights.")
+                test_metrics = training_util.evaluate(
+                    self.model,
+                    self.evaluation_data_loader,
+                    cuda_device=self.trainer.cuda_device,
+                    batch_weight_key=self.batch_weight_key,
+                )
 
-            for key, value in test_metrics.items():
-                metrics["test_" + key] = value
-        elif self.evaluation_data_loader is not None:
-            logger.info(
-                "To evaluate on the test set after training, pass the "
-                "'evaluate_on_test' flag, or use the 'allennlp evaluate' command."
-            )
+                for key, value in test_metrics.items():
+                    metrics["test_" + key] = value
+            else:
+                logger.info(
+                    "To evaluate on the test set after training, pass the "
+                    "'evaluate_on_test' flag, or use the 'allennlp evaluate' command."
+                )
         common_util.dump_metrics(
             os.path.join(self.serialization_dir, "metrics.json"), metrics, log=True
         )

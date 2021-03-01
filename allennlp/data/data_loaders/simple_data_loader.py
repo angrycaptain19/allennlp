@@ -46,7 +46,7 @@ class SimpleDataLoader(DataLoader):
         else:
             if self._batch_generator is None:
                 self._batch_generator = self._iter_batches()
-            for i in range(self.batches_per_epoch):
+            for _ in range(self.batches_per_epoch):
                 try:
                     yield next(self._batch_generator)
                 except StopIteration:  # data_generator is exhausted

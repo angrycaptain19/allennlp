@@ -47,13 +47,17 @@ class InputReduction(Attacker):
             input_field_to_attack
         ]
         original_tokens = deepcopy(original_text_field.tokens)
-        final_tokens = []
-        for instance in original_instances:
-            final_tokens.append(
-                self._attack_instance(
-                    inputs, instance, input_field_to_attack, grad_input_field, ignore_tokens
-                )
+        final_tokens = [
+            self._attack_instance(
+                inputs,
+                instance,
+                input_field_to_attack,
+                grad_input_field,
+                ignore_tokens,
             )
+            for instance in original_instances
+        ]
+
         return sanitize({"final": final_tokens, "original": original_tokens})
 
     def _attack_instance(
@@ -203,12 +207,11 @@ def _get_ner_tags_and_mask(
     Used for the NER task. Sets the num_ignore tokens, saves the original predicted tag and a 0/1
     mask in the position of the tags
     """
-    # Set num_ignore_tokens
-    num_ignore_tokens = 0
     input_field: TextField = instance[input_field_to_attack]  # type: ignore
-    for token in input_field.tokens:
-        if str(token) in ignore_tokens:
-            num_ignore_tokens += 1
+    # Set num_ignore_tokens
+    num_ignore_tokens = sum(
+        str(token) in ignore_tokens for token in input_field.tokens
+    )
 
     # save the original tags and a 0/1 mask where the tags are
     tag_mask = []

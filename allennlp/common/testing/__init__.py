@@ -63,8 +63,8 @@ def assert_metrics_values(
     rtol: float = 0.0001,
     atol: float = 1e-05,
 ):
-    for key in metrics:
-        assert_allclose(metrics[key], desired_values[key], rtol=rtol, atol=atol)
+    for key, value in metrics.items():
+        assert_allclose(value, desired_values[key], rtol=rtol, atol=atol)
 
 
 def global_distributed_metric(
@@ -123,9 +123,8 @@ def assert_equal_parameters(
     for name, parameter in new_module.named_parameters():
         for key, val in mapping.items():
             name = name.replace(key, val)
-        if ignore_missing:
-            if name not in old_parameters:
-                continue
+        if ignore_missing and name not in old_parameters:
+            continue
         present_only_in_old.remove(name)
         assert torch.allclose(old_parameters[name], parameter)
     return present_only_in_old

@@ -218,9 +218,7 @@ def _iob1_start_of_chunk(
         return True
     if curr_bio_tag == "I" and prev_bio_tag == "O":
         return True
-    if curr_bio_tag != "O" and prev_conll_tag != curr_conll_tag:
-        return True
-    return False
+    return curr_bio_tag != "O" and prev_conll_tag != curr_conll_tag
 
 
 def bioul_tags_to_spans(
@@ -260,7 +258,7 @@ def bioul_tags_to_spans(
                 if index >= len(tag_sequence):
                     raise InvalidTagSequence(tag_sequence)
                 label = tag_sequence[index]
-                if not (label[0] == "I" or label[0] == "L"):
+                if not label[0] in ["I", "L"]:
                     raise InvalidTagSequence(tag_sequence)
             spans.append((label.partition("-")[2], (start, index)))
         else:

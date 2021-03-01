@@ -114,8 +114,7 @@ class BucketBatchSampler(BatchSampler):
                 continue
             batches.append(batch_indices)
         random.shuffle(batches)
-        for batch in batches:
-            yield batch
+        yield from batches
 
     def _guess_sorting_keys(self, instances: Iterable[Instance], num_instances: int = 10) -> None:
         """

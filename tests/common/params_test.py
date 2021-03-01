@@ -292,8 +292,8 @@ class TestParams(AllenNlpTestCase):
 
         assert infer_and_cast(lots_of_strings) == casted
 
-        contains_bad_data = {"x": 10, "y": int}
         with pytest.raises(ValueError, match="cannot infer type"):
+            contains_bad_data = {"x": 10, "y": int}
             infer_and_cast(contains_bad_data)
 
         params = Params(lots_of_strings)

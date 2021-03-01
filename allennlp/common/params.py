@@ -244,11 +244,11 @@ class Params(MutableMapping):
         else:
             value = self.params.pop(key, default)
 
-        if keep_as_dict or _is_dict_free(value):
-            logger.info(f"{self.history}{key} = {value}")
-            return value
-        else:
+        if not keep_as_dict and not _is_dict_free(value):
             return self._check_is_dict(key, value)
+
+        logger.info(f"{self.history}{key} = {value}")
+        return value
 
     def pop_int(self, key: str, default: Any = DEFAULT) -> Optional[int]:
         """
@@ -582,10 +582,9 @@ def pop_choice(
     history, so you'll have to fix that in the log if you want to actually recover the logged
     parameters.
     """
-    value = Params(params, history).pop_choice(
+    return Params(params, history).pop_choice(
         key, choices, default_to_first_choice, allow_class_names=allow_class_names
     )
-    return value
 
 
 def _replace_none(params: Any) -> Any:

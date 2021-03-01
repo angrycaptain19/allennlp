@@ -16,7 +16,7 @@ def main():
             and issue.pull_request is None
             and (dt.utcnow() - issue.updated_at).days >= 14
         ):
-            assignees = ", ".join([f"@{user.login}" for user in issue.assignees])
+            assignees = ", ".join(f"@{user.login}" for user in issue.assignees)
             print(f"Pinging {assignees} for {issue}")
             issue.create_comment(
                 f"{assignees} this is just a friendly ping to make sure you "

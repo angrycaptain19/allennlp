@@ -11,7 +11,7 @@ class LazyIterable:
         self._instances = instances
 
     def __iter__(self):
-        return (instance for instance in self._instances)
+        return iter(self._instances)
 
 
 class SamplerTest(AllenNlpTestCase):
@@ -47,8 +47,7 @@ class SamplerTest(AllenNlpTestCase):
                 self.instances = instances
 
             def _read(self, file_path: str):
-                for instance in self.instances:
-                    yield instance
+                yield from self.instances
 
         return MockReader(self.instances)
 

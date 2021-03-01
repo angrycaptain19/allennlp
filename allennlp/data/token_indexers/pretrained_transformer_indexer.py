@@ -193,7 +193,7 @@ class PretrainedTransformerIndexer(TokenIndexer):
             if key == "type_ids":
                 padding_value = 0
                 mktensor = torch.LongTensor
-            elif key == "mask" or key == "wordpiece_mask":
+            elif key in ["mask", "wordpiece_mask"]:
                 padding_value = False
                 mktensor = torch.BoolTensor
             elif len(val) > 0 and isinstance(val[0], bool):

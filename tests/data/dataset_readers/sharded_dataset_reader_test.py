@@ -52,10 +52,7 @@ class TestShardedDatasetReader(AllenNlpTestCase):
         self.reader = ShardedDatasetReader(base_reader=self.base_reader)
 
     def read_and_check_instances(self, filepath: str):
-        all_instances = []
-        for instance in self.reader.read(filepath):
-            all_instances.append(instance)
-
+        all_instances = [instance for instance in self.reader.read(filepath)]
         # 100 files * 4 sentences / file
         assert len(all_instances) == 100 * 4
 

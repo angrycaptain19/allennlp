@@ -68,16 +68,19 @@ class LabelField(Field[torch.Tensor]):
             )
 
     def _maybe_warn_for_namespace(self, label_namespace: str) -> None:
-        if not (self._label_namespace.endswith("labels") or self._label_namespace.endswith("tags")):
-            if label_namespace not in self._already_warned_namespaces:
-                logger.warning(
-                    "Your label namespace was '%s'. We recommend you use a namespace "
-                    "ending with 'labels' or 'tags', so we don't add UNK and PAD tokens by "
-                    "default to your vocabulary.  See documentation for "
-                    "`non_padded_namespaces` parameter in Vocabulary.",
-                    self._label_namespace,
-                )
-                self._already_warned_namespaces.add(label_namespace)
+        if (
+            not self._label_namespace.endswith("labels")
+            and not self._label_namespace.endswith("tags")
+            and label_namespace not in self._already_warned_namespaces
+        ):
+            logger.warning(
+                "Your label namespace was '%s'. We recommend you use a namespace "
+                "ending with 'labels' or 'tags', so we don't add UNK and PAD tokens by "
+                "default to your vocabulary.  See documentation for "
+                "`non_padded_namespaces` parameter in Vocabulary.",
+                self._label_namespace,
+            )
+            self._already_warned_namespaces.add(label_namespace)
 
     @overrides
     def count_vocab_items(self, counter: Dict[str, Dict[str, int]]):
@@ -98,8 +101,7 @@ class LabelField(Field[torch.Tensor]):
     @overrides
     def as_tensor(self, padding_lengths: Dict[str, int]) -> torch.Tensor:
 
-        tensor = torch.tensor(self._label_id, dtype=torch.long)
-        return tensor
+        return torch.tensor(self._label_id, dtype=torch.long)
 
     @overrides
     def empty_field(self):

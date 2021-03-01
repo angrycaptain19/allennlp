@@ -46,10 +46,10 @@ class BasicTextFieldEmbedder(TextFieldEmbedder):
 
     @overrides
     def get_output_dim(self) -> int:
-        output_dim = 0
-        for embedder in self._token_embedders.values():
-            output_dim += embedder.get_output_dim()
-        return output_dim
+        return sum(
+            embedder.get_output_dim()
+            for embedder in self._token_embedders.values()
+        )
 
     def forward(
         self, text_field_input: TextFieldTensors, num_wrapping_dims: int = 0, **kwargs

@@ -371,9 +371,9 @@ class ModelTestCase(AllenNlpTestCase):
         full_dataset = Batch(self.instances)
         batch_tensors = full_dataset.as_tensor_dict(full_dataset.get_padding_lengths())
         batch_predictions = self.model(**batch_tensors)
+        tolerance = 1e-6
         for i, instance_predictions in enumerate(single_predictions):
             for key, single_predicted in instance_predictions.items():
-                tolerance = 1e-6
                 if "loss" in key:
                     # Loss is particularly unstable; we'll just be satisfied if everything else is
                     # close.

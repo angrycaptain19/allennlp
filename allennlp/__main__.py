@@ -20,9 +20,7 @@ logging.getLogger("filelock").setLevel(logging.WARNING)
 # transformers emits an annoying log message everytime it's imported, so we filter that
 # one message out specifically.
 def _transformers_log_filter(record):
-    if record.msg.startswith("PyTorch version"):
-        return False
-    return True
+    return not record.msg.startswith("PyTorch version")
 
 
 logging.getLogger("transformers.file_utils").addFilter(_transformers_log_filter)

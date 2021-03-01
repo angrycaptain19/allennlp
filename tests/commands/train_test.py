@@ -191,11 +191,7 @@ class TestTrain(AllenNlpTestCase):
 
     @cpu_or_gpu
     def test_train_model_distributed(self):
-        if torch.cuda.device_count() >= 2:
-            devices = [0, 1]
-        else:
-            devices = [-1, -1]
-
+        devices = [0, 1] if torch.cuda.device_count() >= 2 else [-1, -1]
         params = lambda: Params(
             {
                 "model": {
@@ -240,11 +236,7 @@ class TestTrain(AllenNlpTestCase):
     @cpu_or_gpu
     @pytest.mark.parametrize("max_instances_in_memory", [None, 10])
     def test_train_model_distributed_with_sharded_reader(self, max_instances_in_memory):
-        if torch.cuda.device_count() >= 2:
-            devices = [0, 1]
-        else:
-            devices = [-1, -1]
-
+        devices = [0, 1] if torch.cuda.device_count() >= 2 else [-1, -1]
         params = lambda: Params(
             {
                 "model": {
@@ -328,11 +320,7 @@ class TestTrain(AllenNlpTestCase):
     @cpu_or_gpu
     @pytest.mark.parametrize("max_instances_in_memory", [None, 10])
     def test_train_model_distributed_without_sharded_reader(self, max_instances_in_memory):
-        if torch.cuda.device_count() >= 2:
-            devices = [0, 1]
-        else:
-            devices = [-1, -1]
-
+        devices = [0, 1] if torch.cuda.device_count() >= 2 else [-1, -1]
         num_epochs = 2
         params = lambda: Params(
             {
@@ -751,10 +739,12 @@ class TestDryRun(AllenNlpTestCase):
         os.makedirs(existing_serialization_dir, exist_ok=True)
         vocab.save_to_files(existing_vocab_path)
 
-        self.params["vocabulary"] = {}
-        self.params["vocabulary"]["type"] = "extend"
-        self.params["vocabulary"]["directory"] = str(existing_vocab_path)
-        self.params["vocabulary"]["min_count"] = {"tokens": 3}
+        self.params["vocabulary"] = {
+            "type": "extend",
+            "directory": str(existing_vocab_path),
+            "min_count": {"tokens": 3},
+        }
+
         train_model(self.params, extended_serialization_dir, dry_run=True)
 
         vocab_files = os.listdir(extended_vocab_path)
@@ -807,9 +797,11 @@ class TestDryRun(AllenNlpTestCase):
         os.makedirs(existing_serialization_dir, exist_ok=True)
         vocab.save_to_files(existing_vocab_path)
 
-        self.params["vocabulary"] = {}
-        self.params["vocabulary"]["type"] = "from_files"
-        self.params["vocabulary"]["directory"] = str(existing_vocab_path)
+        self.params["vocabulary"] = {
+            "type": "from_files",
+            "directory": str(existing_vocab_path),
+        }
+
         train_model(self.params, extended_serialization_dir, dry_run=True)
 
         with open(extended_vocab_path / "tokens.txt") as f:

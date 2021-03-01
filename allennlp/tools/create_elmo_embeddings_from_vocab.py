@@ -45,14 +45,9 @@ def main(
 
     indexer = ELMoTokenCharactersIndexer()
     indices = indexer.tokens_to_indices([Token(token) for token in tokens], Vocabulary())["tokens"]
-    sentences = []
-    for k in range((len(indices) // 50) + 1):
-        sentences.append(
-            indexer.as_padded_tensor_dict(
+    sentences = [indexer.as_padded_tensor_dict(
                 indices[(k * 50) : ((k + 1) * 50)], padding_lengths={"tokens": 50}
-            )
-        )
-
+            ) for k in range((len(indices) // 50) + 1)]
     last_batch_remainder = 50 - (len(indices) % 50)
     if device != -1:
         elmo_token_embedder = _ElmoCharacterEncoder(elmo_config_path, elmo_weights_path).cuda(

@@ -121,10 +121,9 @@ class TensorBoardWriter(LogWriter):
 
     def add_train_tensor(self, name: str, values: torch.Tensor) -> None:
         assert self.get_batch_num_total is not None
-        if self._train_log is not None:
-            if isinstance(values, torch.Tensor):
-                values_to_write = values.cpu().data.numpy().flatten()
-                self._train_log.add_histogram(name, values_to_write, self.get_batch_num_total())
+        if self._train_log is not None and isinstance(values, torch.Tensor):
+            values_to_write = values.cpu().data.numpy().flatten()
+            self._train_log.add_histogram(name, values_to_write, self.get_batch_num_total())
 
     def add_train_histogram(self, name: str, values: torch.Tensor) -> None:
         """

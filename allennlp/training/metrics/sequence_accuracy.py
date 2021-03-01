@@ -89,10 +89,7 @@ class SequenceAccuracy(Metric):
 
         The accumulated accuracy.
         """
-        if self.total_count > 0:
-            accuracy = self.correct_count / self.total_count
-        else:
-            accuracy = 0
+        accuracy = self.correct_count / self.total_count if self.total_count > 0 else 0
         if reset:
             self.reset()
         return {"accuracy": accuracy}

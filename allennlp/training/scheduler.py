@@ -32,13 +32,12 @@ class Scheduler:
         self.optimizer = optimizer
         self.param_group_field = param_group_field
         self._initial_param_group_field = f"initial_{param_group_field}"
-        if last_epoch == -1:
-            for i, group in enumerate(self.optimizer.param_groups):
+        for i, group in enumerate(self.optimizer.param_groups):
+            if last_epoch == -1:
                 if param_group_field not in group:
                     raise KeyError(f"{param_group_field} missing from param_groups[{i}]")
                 group.setdefault(self._initial_param_group_field, group[param_group_field])
-        else:
-            for i, group in enumerate(self.optimizer.param_groups):
+            else:
                 if self._initial_param_group_field not in group:
                     raise KeyError(
                         f"{self._initial_param_group_field} missing from param_groups[{i}]"

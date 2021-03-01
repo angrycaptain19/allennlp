@@ -117,13 +117,15 @@ class PretrainedTransformerBackbone(Backbone):
         if not self._output_token_strings:
             return output_dict
 
-        tokens = []
-        for instance_tokens in output_dict["token_ids"]:
-            tokens.append(
-                [
-                    self._vocab.get_token_from_index(token_id.item(), namespace=self._namespace)
-                    for token_id in instance_tokens
-                ]
-            )
+        tokens = [
+            [
+                self._vocab.get_token_from_index(
+                    token_id.item(), namespace=self._namespace
+                )
+                for token_id in instance_tokens
+            ]
+            for instance_tokens in output_dict["token_ids"]
+        ]
+
         output_dict["tokens"] = tokens
         return output_dict

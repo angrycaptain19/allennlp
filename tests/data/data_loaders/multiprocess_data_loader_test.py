@@ -70,8 +70,12 @@ class MockOldDatasetReader(DatasetReader):
             yield self.text_to_instance(source, target)
 
     def text_to_instance(self, source: str, target: str = None) -> Instance:  # type: ignore
-        fields = {}
-        fields["source"] = TextField(self.tokenizer.tokenize(source), self.token_indexers)  # type: ignore
+        fields = {
+            "source": TextField(
+                self.tokenizer.tokenize(source), self.token_indexers
+            )
+        }
+
         if target is not None:
             fields["target"] = TextField(self.tokenizer.tokenize(target), self.token_indexers)  # type: ignore
         return Instance(fields)  # type: ignore

@@ -126,13 +126,12 @@ class AttachmentScores(Metric):
             labeled_exact_match = float(self._exact_labeled_correct) / float(self._total_sentences)
         if reset:
             self.reset()
-        metrics = {
+        return {
             "UAS": unlabeled_attachment_score,
             "LAS": labeled_attachment_score,
             "UEM": unlabeled_exact_match,
             "LEM": labeled_exact_match,
         }
-        return metrics
 
     @overrides
     def reset(self):

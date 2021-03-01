@@ -191,7 +191,7 @@ class FasterRcnnRegionDetector(RegionDetector):
         # https://github.com/pytorch/vision/blob/
         # 4521f6d152875974e317fa247a633e9ad1ea05c8/torchvision/models/detection/roi_heads.py#L752-L753
 
-        image_shapes: List[Tuple[int, int]] = list((int(h), int(w)) for (h, w) in sizes)
+        image_shapes: List[Tuple[int, int]] = [(int(h), int(w)) for (h, w) in sizes]
         image_list = torchvision.models.detection.image_list.ImageList(images, image_shapes)
 
         # `proposals` is a list of tensors, one tensor per image, each representing a

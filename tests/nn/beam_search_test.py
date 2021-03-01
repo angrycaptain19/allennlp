@@ -108,13 +108,15 @@ class BeamSearchTest(AllenNlpTestCase):
         self._check_results(take_step=step_function)
 
     def test_finished_state(self):
-        state = {}
-        state["foo"] = torch.tensor([[1, 0, 1], [2, 0, 1], [0, 0, 1], [1, 1, 1], [0, 0, 0]])
+        state = {
+            "foo": torch.tensor(
+                [[1, 0, 1], [2, 0, 1], [0, 0, 1], [1, 1, 1], [0, 0, 0]]
+            )
+        }
+
         # shape: (batch_size, 3)
 
-        expected_finished_state = {}
-        expected_finished_state["foo"] = np.array(
-            [
+        expected_finished_state = {"foo": np.array([
                 [1, 0, 1],
                 [1, 0, 1],
                 [1, 0, 1],
@@ -130,8 +132,7 @@ class BeamSearchTest(AllenNlpTestCase):
                 [0, 0, 0],
                 [0, 0, 0],
                 [0, 0, 0],
-            ]
-        )
+            ])}
         # shape: (batch_size x beam_size, 3)
 
         self._check_results(state=state)
@@ -141,10 +142,12 @@ class BeamSearchTest(AllenNlpTestCase):
             np.testing.assert_allclose(state[key].numpy(), array)
 
     def test_diff_shape_state(self):
-        state = {}
-        state["decoder_hidden"] = torch.tensor(
-            [[1, 0, 1], [2, 0, 1], [0, 0, 1], [1, 1, 1], [0, 0, 0]]
-        )
+        state = {
+            "decoder_hidden": torch.tensor(
+                [[1, 0, 1], [2, 0, 1], [0, 0, 1], [1, 1, 1], [0, 0, 0]]
+            )
+        }
+
         state["decoder_hidden"] = state["decoder_hidden"].unsqueeze(0).repeat(2, 1, 1)
         # shape: (2, batch_size, 3)
 
@@ -166,8 +169,7 @@ class BeamSearchTest(AllenNlpTestCase):
             [0, 0, 0],
         ]
         seq = [seq] * 2
-        expected_finished_state = {}
-        expected_finished_state["decoder_hidden"] = np.array(seq)
+        expected_finished_state = {"decoder_hidden": np.array(seq)}
         # shape: (2, batch_size x beam_size, 3)
 
         self._check_results(state=state)
@@ -274,7 +276,7 @@ class BeamSearchTest(AllenNlpTestCase):
         # top_p should be shape `(batch_size, beam_size, max_predicted_length)`.
         assert list(top_p.size())[:-1] == [batch_size, beam_size]
 
-        assert ((0 <= top_p) & (top_p <= 5)).all()
+        assert ((top_p >= 0) & (top_p <= 5)).all()
 
         # log_probs should be shape `(batch_size, beam_size, max_predicted_length)`.
         assert list(log_probs.size()) == [batch_size, beam_size]
@@ -307,7 +309,7 @@ class BeamSearchTest(AllenNlpTestCase):
         # top_p should be shape `(batch_size, beam_size, max_predicted_length)`.
         assert list(top_k.size())[:-1] == [batch_size, beam_size]
 
-        assert ((0 <= top_k) & (top_k <= 5)).all()
+        assert ((top_k >= 0) & (top_k <= 5)).all()
 
         # log_probs should be shape `(batch_size, beam_size, max_predicted_length)`.
         assert list(log_probs.size()) == [batch_size, beam_size]
@@ -339,7 +341,7 @@ class BeamSearchTest(AllenNlpTestCase):
         # top_p should be shape `(batch_size, beam_size, max_predicted_length)`.
         assert list(top_k.size())[:-1] == [batch_size, beam_size]
 
-        assert ((0 <= top_k) & (top_k <= 5)).all()
+        assert ((top_k >= 0) & (top_k <= 5)).all()
 
         # log_probs should be shape `(batch_size, beam_size, max_predicted_length)`.
         assert list(log_probs.size()) == [batch_size, beam_size]
@@ -396,8 +398,8 @@ class BeamSearchTest(AllenNlpTestCase):
 
         assert probabilities.size() == classes.size()
         assert classes.size() == (2, 3)
-        assert all([x < 4 for x in classes[0]])
-        assert all([x > 1 for x in classes[1]])
+        assert all(x < 4 for x in classes[0])
+        assert all(x > 1 for x in classes[1])
 
     def test_top_k_sampler(self):
         sampler = TopKSampler(k=3, temperature=0.9)
@@ -407,8 +409,8 @@ class BeamSearchTest(AllenNlpTestCase):
         assert probabilities.size() == classes.size()
         assert classes.size() == (2, 3)
 
-        assert all([x > 0 and x < 4 for x in classes[0]])
-        assert all([x > 1 and x < 5 for x in classes[1]])
+        assert all(x > 0 and x < 4 for x in classes[0])
+        assert all(x > 1 and x < 5 for x in classes[1])
 
     def test_top_p_sampler(self):
         sampler = TopPSampler(p=0.8, temperature=0.9)
@@ -418,16 +420,16 @@ class BeamSearchTest(AllenNlpTestCase):
         assert probabilities.size() == classes.size()
         assert classes.size() == (2, 3)
 
-        assert all([x > 0 and x < 4 for x in classes[0]])
-        assert all([x > 1 and x < 5 for x in classes[1]])
+        assert all(x > 0 and x < 4 for x in classes[0])
+        assert all(x > 1 and x < 5 for x in classes[1])
 
         # Make sure the filtered classes include the first class that exceeds p
         sampler = TopPSampler(p=0.7, temperature=1.0)
 
         probabilities, classes, state = sampler.sample_nodes(log_probabilities, 2, {"foo": "bar"})
 
-        assert all([x == 2 or x == 3 or x == 1 for x in classes[0]])
-        assert all([x == 2 or x == 3 for x in classes[1]])
+        assert all(x in [2, 3, 1] for x in classes[0])
+        assert all(x in [2, 3] for x in classes[1])
 
     def test_gumbel_sampler(self):
         sampler = GumbelSampler()
@@ -443,5 +445,5 @@ class BeamSearchTest(AllenNlpTestCase):
         _, sorted_indices = log_probs.sort(dim=-1, descending=True)
         assert (sorted_indices == torch.arange(3).unsqueeze(0)).all()
 
-        assert all([x >= 0 and x < 4 for x in indices[0]])
-        assert all([x > 1 and x <= 5 for x in indices[1]])
+        assert all(x >= 0 and x < 4 for x in indices[0])
+        assert all(x > 1 and x <= 5 for x in indices[1])

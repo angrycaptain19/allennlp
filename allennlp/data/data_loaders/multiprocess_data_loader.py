@@ -328,7 +328,7 @@ class MultiProcessDataLoader(DataLoader):
                 self._batch_generator = None
             else:
                 batch_generator = self._iter_batches()
-            for i in range(self.batches_per_epoch):
+            for _ in range(self.batches_per_epoch):
                 try:
                     yield next(batch_generator)
                 except StopIteration:  # batch_generator is exhausted
@@ -382,8 +382,10 @@ class MultiProcessDataLoader(DataLoader):
 
     def _iter_batches(self) -> Iterator[TensorDict]:
         if self._instances is not None or self.num_workers <= 0:
-            for batch in self._instances_to_batches(self.iter_instances(), move_to_device=True):
-                yield batch
+            yield from self._instances_to_batches(
+                self.iter_instances(), move_to_device=True
+            )
+
         else:
             ctx = mp.get_context(self.start_method)
 
@@ -439,7 +441,7 @@ class MultiProcessDataLoader(DataLoader):
         # Each worker will be blocking on a call to `queue.join()`,
         # calling `queue.task_done()` times the number of workers will
         # call the `queue.join()` to return, and each worker should exit on its own.
-        for _ in range(len(workers)):
+        for worker_ in workers:
             try:
                 queue.task_done()
             except ValueError:

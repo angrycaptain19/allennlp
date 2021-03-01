@@ -72,10 +72,7 @@ class BasicClassifier(Model):
         else:
             self._classifier_input_dim = self._seq2vec_encoder.get_output_dim()
 
-        if dropout:
-            self._dropout = torch.nn.Dropout(dropout)
-        else:
-            self._dropout = None
+        self._dropout = torch.nn.Dropout(dropout) if dropout else None
         self._label_namespace = label_namespace
         self._namespace = namespace
 
@@ -130,8 +127,12 @@ class BasicClassifier(Model):
         logits = self._classification_layer(embedded_text)
         probs = torch.nn.functional.softmax(logits, dim=-1)
 
-        output_dict = {"logits": logits, "probs": probs}
-        output_dict["token_ids"] = util.get_token_ids_from_text_field_tensors(tokens)
+        output_dict = {
+            "logits": logits,
+            "probs": probs,
+            "token_ids": util.get_token_ids_from_text_field_tensors(tokens),
+        }
+
         if label is not None:
             loss = self._loss(logits, label.long().view(-1))
             output_dict["loss"] = loss
@@ -160,19 +161,20 @@ class BasicClassifier(Model):
             )
             classes.append(label_str)
         output_dict["label"] = classes
-        tokens = []
-        for instance_tokens in output_dict["token_ids"]:
-            tokens.append(
-                [
-                    self.vocab.get_token_from_index(token_id.item(), namespace=self._namespace)
-                    for token_id in instance_tokens
-                ]
-            )
+        tokens = [
+            [
+                self.vocab.get_token_from_index(
+                    token_id.item(), namespace=self._namespace
+                )
+                for token_id in instance_tokens
+            ]
+            for instance_tokens in output_dict["token_ids"]
+        ]
+
         output_dict["tokens"] = tokens
         return output_dict
 
     def get_metrics(self, reset: bool = False) -> Dict[str, float]:
-        metrics = {"accuracy": self._accuracy.get_metric(reset)}
-        return metrics
+        return {"accuracy": self._accuracy.get_metric(reset)}
 
     default_predictor = "text_classifier"

@@ -698,13 +698,13 @@ class Vocabulary(Registrable):
                 "Vocabulary tokens must be strings, or saving and loading will break."
                 "  Got %s (with type %s)" % (repr(token), type(token))
             )
-        if token not in self._token_to_index[namespace]:
-            index = len(self._token_to_index[namespace])
-            self._token_to_index[namespace][token] = index
-            self._index_to_token[namespace][index] = token
-            return index
-        else:
+        if token in self._token_to_index[namespace]:
             return self._token_to_index[namespace][token]
+
+        index = len(self._token_to_index[namespace])
+        self._token_to_index[namespace][token] = index
+        self._index_to_token[namespace][index] = token
+        return index
 
     def add_tokens_to_namespace(self, tokens: List[str], namespace: str = "tokens") -> List[int]:
         """

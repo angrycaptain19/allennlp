@@ -14,7 +14,7 @@ from allennlp.nn import InitializerApplicator
 
 def get_forward_arguments(module: torch.nn.Module) -> Set[str]:
     signature = inspect.signature(module.forward)
-    return set([arg for arg in signature.parameters if arg != "self"])
+    return {arg for arg in signature.parameters if arg != "self"}
 
 
 @Model.register("multitask")
@@ -112,11 +112,11 @@ class MultiTaskModel(Model):
         }
 
         def make_inputs_for_task(task: str, whole_batch_input: Union[torch.Tensor, List]):
-            if isinstance(whole_batch_input, torch.Tensor):
-                task_indices[task] = task_indices[task].to(whole_batch_input.device)
-                return torch.index_select(whole_batch_input, 0, task_indices[task])
-            else:
+            if not isinstance(whole_batch_input, torch.Tensor):
                 return [whole_batch_input[i] for i in task_indices[task]]
+
+            task_indices[task] = task_indices[task].to(whole_batch_input.device)
+            return torch.index_select(whole_batch_input, 0, task_indices[task])
 
         backbone_arguments = self._get_arguments(kwargs, "backbone")
         backbone_outputs = self._backbone(**backbone_arguments)
@@ -189,10 +189,12 @@ class MultiTaskModel(Model):
     ) -> Dict[str, torch.Tensor]:
         output_dict = self._backbone.make_output_human_readable(output_dict)
         for head_name, head in self._heads.items():
-            head_outputs = {}
-            for key, value in output_dict.items():
-                if key.startswith(head_name):
-                    head_outputs[key.replace(f"{head_name}_", "")] = value
+            head_outputs = {
+                key.replace(f"{head_name}_", ""): value
+                for key, value in output_dict.items()
+                if key.startswith(head_name)
+            }
+
             readable_head_outputs = head.make_output_human_readable(head_outputs)
             for key, value in readable_head_outputs.items():
                 output_dict[f"{head_name}_{key}"] = value

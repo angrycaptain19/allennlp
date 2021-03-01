@@ -129,8 +129,11 @@ class SelfAttention(TransformerModule, FromParams):
         if hasattr(self, "output"):
             context_layer = self.output(context_layer)
 
-        outputs = (context_layer, attention_probs) if output_attentions else (context_layer,)
-        return outputs
+        return (
+            (context_layer, attention_probs)
+            if output_attentions
+            else (context_layer,)
+        )
 
     @classmethod
     def _get_mapping(
@@ -161,9 +164,8 @@ class SelfAttention(TransformerModule, FromParams):
         **kwargs,
     ):
         submodules = cls._get_mapped_submodules(pretrained_module, source, mapping)
-        final_kwargs = {}
+        final_kwargs = {"hidden_size": submodules["query"].in_features}
 
-        final_kwargs["hidden_size"] = submodules["query"].in_features
         if hasattr(submodules[""], "num_attention_heads"):
             final_kwargs["num_attention_heads"] = submodules[""].num_attention_heads
         elif hasattr(submodules[""], "n_heads"):

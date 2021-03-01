@@ -346,11 +346,7 @@ def evaluate(
 
             if loss is not None:
                 loss_count += 1
-                if batch_weight_key:
-                    weight = output_dict[batch_weight_key].item()
-                else:
-                    weight = 1.0
-
+                weight = output_dict[batch_weight_key].item() if batch_weight_key else 1.0
                 total_weight += weight
                 total_loss += loss.item() * weight
                 # Report the average loss so far.
@@ -366,14 +362,13 @@ def evaluate(
                 HasBeenWarned.tqdm_ignores_underscores = True
             description = (
                 ", ".join(
-                    [
-                        "%s: %.2f" % (name, value)
-                        for name, value in metrics.items()
-                        if not name.startswith("_")
-                    ]
+                    "%s: %.2f" % (name, value)
+                    for name, value in metrics.items()
+                    if not name.startswith("_")
                 )
                 + " ||"
             )
+
             generator_tqdm.set_description(description, refresh=False)
 
             if predictions_file is not None:
@@ -406,16 +401,8 @@ def description_from_metrics(metrics: Dict[str, float]) -> str:
             'Metrics with names beginning with "_" will ' "not be logged to the tqdm progress bar."
         )
         HasBeenWarned.tqdm_ignores_underscores = True
-    return (
-        ", ".join(
-            [
-                "%s: %.4f" % (name, value)
-                for name, value in metrics.items()
-                if not name.startswith("_")
-            ]
-        )
-        + " ||"
-    )
+    return (", ".join("%s: %.4f" % (name, value) for name, value in metrics.items()
+                    if not name.startswith("_")) + " ||")
 
 
 def make_vocab_from_params(

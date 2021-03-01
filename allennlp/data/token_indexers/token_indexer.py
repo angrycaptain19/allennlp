@@ -88,10 +88,10 @@ class TokenIndexer(Registrable):
         something more complicated, like a list of character ids for token, you'll need to override
         this.
         """
-        padding_lengths = {}
-        for key, token_list in indexed_tokens.items():
-            padding_lengths[key] = max(len(token_list), self._token_min_padding_length)
-        return padding_lengths
+        return {
+            key: max(len(token_list), self._token_min_padding_length)
+            for key, token_list in indexed_tokens.items()
+        }
 
     def as_padded_tensor_dict(
         self, tokens: IndexedTokenList, padding_lengths: Dict[str, int]

@@ -73,11 +73,7 @@ def decode_mst(
     )
 
     heads = numpy.zeros([max_length], numpy.int32)
-    if has_labels:
-        head_type = numpy.ones([max_length], numpy.int32)
-    else:
-        head_type = None
-
+    head_type = numpy.ones([max_length], numpy.int32) if has_labels else None
     for child, parent in final_edges.items():
         heads[child] = parent
         if has_labels:
@@ -265,8 +261,7 @@ def _find_cycle(
         if added[i] or not current_nodes[i]:
             continue
         # Initialize a new possible cycle.
-        this_cycle = set()
-        this_cycle.add(i)
+        this_cycle = {i}
         added[i] = True
         has_cycle = True
         next_node = i

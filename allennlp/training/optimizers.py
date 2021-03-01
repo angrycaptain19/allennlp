@@ -246,17 +246,19 @@ class MultiOptimizer(Optimizer):
 
         # calculate parameter groups for each optimizer
         optimizer_name_to_parameter_groups: Dict[str, ParameterGroupsType] = {
-            optimizer_name: [] for optimizer_name in optimizers.keys()
+            optimizer_name: [] for optimizer_name in optimizers
         }
+
         for parameter_group in parameter_groups:
             regexes, pg_overrides = parameter_group
             optimizer_name = pg_overrides.get("optimizer_name", "default")
             optimizer_name_to_parameter_groups[optimizer_name].append(parameter_group)
 
         # calculate model parameters for each optimizer
-        optimizer_name_to_model_parameters: Dict[str, List[Tuple[str, torch.nn.Parameter]]] = {
-            optimizer_name: [] for optimizer_name in optimizers.keys()
-        }
+        optimizer_name_to_model_parameters: Dict[
+            str, List[Tuple[str, torch.nn.Parameter]]
+        ] = {optimizer_name: [] for optimizer_name in optimizers}
+
         for model_parameter_tuple in model_parameters:
             parameter_name, parameter_tensor = model_parameter_tuple
             for regexes, pg_overrides in parameter_groups:
@@ -327,12 +329,10 @@ class MultiOptimizer(Optimizer):
         }.
         ```
         """
-        optimizer_state_dict = {
+        return {
             f"{optimizer_key}_optimizer": optimizer.state_dict()
             for optimizer_key, optimizer in self.optimizers.items()
         }
-
-        return optimizer_state_dict
 
     @overrides
     def load_state_dict(self, training_state: Dict[str, Any]):
@@ -637,9 +637,9 @@ class DenseSparseAdam(Optimizer, torch.optim.Optimizer):
         betas=(0.9, 0.999),
         eps=1e-8,
     ):
-        if not 0.0 <= lr:
+        if not lr >= 0.0:
             raise ValueError("Invalid learning rate: {}".format(lr))
-        if not 0.0 <= eps:
+        if not eps >= 0.0:
             raise ValueError("Invalid epsilon value: {}".format(eps))
         if not 0.0 <= betas[0] < 1.0:
             raise ValueError("Invalid beta parameter at index 0: {}".format(betas[0]))

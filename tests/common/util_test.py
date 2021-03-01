@@ -147,8 +147,7 @@ class TestCommonUtils(AllenNlpTestCase):
         def one_and_two():
             global cycle_iterator_function_calls
             cycle_iterator_function_calls += 1
-            for i in [1, 2]:
-                yield i
+            yield from [1, 2]
 
         iterator = iter(util.cycle_iterator_function(one_and_two))
 

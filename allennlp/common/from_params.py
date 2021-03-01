@@ -91,10 +91,10 @@ def is_base_registrable(cls) -> bool:
     if not issubclass(cls, Registrable):
         return False
     method_resolution_order = inspect.getmro(cls)[1:]
-    for base_class in method_resolution_order:
-        if issubclass(base_class, Registrable) and base_class is not Registrable:
-            return False
-    return True
+    return not any(
+        issubclass(base_class, Registrable) and base_class is not Registrable
+        for base_class in method_resolution_order
+    )
 
 
 def remove_optional(annotation: type):
@@ -143,11 +143,7 @@ def infer_params(
         if issubclass(super_class_candidate, FromParams):
             super_class = super_class_candidate
             break
-    if super_class:
-        super_parameters = infer_params(super_class)
-    else:
-        super_parameters = {}
-
+    super_parameters = infer_params(super_class) if super_class else {}
     return {**super_parameters, **parameters}  # Subclass parameters overwrite superclass ones
 
 
@@ -585,25 +581,14 @@ class FromParams:
             )
             subclass, constructor_name = as_registrable.resolve_class_name(choice)
             # See the docstring for an explanation of what's going on here.
-            if not constructor_name:
-                constructor_to_inspect = subclass.__init__
-                constructor_to_call = subclass  # type: ignore
-            else:
+            if constructor_name:
                 constructor_to_inspect = cast(Callable[..., T], getattr(subclass, constructor_name))
                 constructor_to_call = constructor_to_inspect
 
-            if hasattr(subclass, "from_params"):
-                # We want to call subclass.from_params.
-                extras = create_extras(subclass, extras)
-                # mypy can't follow the typing redirection that we do, so we explicitly cast here.
-                retyped_subclass = cast(Type[T], subclass)
-                return retyped_subclass.from_params(
-                    params=params,
-                    constructor_to_call=constructor_to_call,
-                    constructor_to_inspect=constructor_to_inspect,
-                    **extras,
-                )
             else:
+                constructor_to_inspect = subclass.__init__
+                constructor_to_call = subclass  # type: ignore
+            if not hasattr(subclass, "from_params"):
                 # In some rare cases, we get a registered subclass that does _not_ have a
                 # from_params method (this happens with Activations, for instance, where we
                 # register pytorch modules directly).  This is a bit of a hack to make those work,
@@ -611,6 +596,16 @@ class FromParams:
                 # you've done the right thing in passing your parameters, and nothing else needs to
                 # be recursively constructed.
                 return subclass(**params)  # type: ignore
+            # We want to call subclass.from_params.
+            extras = create_extras(subclass, extras)
+            # mypy can't follow the typing redirection that we do, so we explicitly cast here.
+            retyped_subclass = cast(Type[T], subclass)
+            return retyped_subclass.from_params(
+                params=params,
+                constructor_to_call=constructor_to_call,
+                constructor_to_inspect=constructor_to_inspect,
+                **extras,
+            )
         else:
             # This is not a base class, so convert our params and extras into a dict of kwargs.
 

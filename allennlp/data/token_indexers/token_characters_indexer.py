@@ -100,10 +100,13 @@ class TokenCharactersIndexer(TokenIndexer):
 
     @overrides
     def get_padding_lengths(self, indexed_tokens: IndexedTokenList) -> Dict[str, int]:
-        padding_lengths = {}
-        padding_lengths["token_characters"] = max(
-            len(indexed_tokens["token_characters"]), self._token_min_padding_length
-        )
+        padding_lengths = {
+            "token_characters": max(
+                len(indexed_tokens["token_characters"]),
+                self._token_min_padding_length,
+            )
+        }
+
         max_num_characters = self._min_padding_length
         for token in indexed_tokens["token_characters"]:
             max_num_characters = max(len(token), max_num_characters)  # type: ignore

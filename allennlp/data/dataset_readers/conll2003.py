@@ -21,12 +21,8 @@ def _is_divider(line: str) -> bool:
     empty_line = line.strip() == ""
     if empty_line:
         return True
-    else:
-        first_token = line.split()[0]
-        if first_token == "-DOCSTART-":
-            return True
-        else:
-            return False
+    first_token = line.split()[0]
+    return first_token == "-DOCSTART-"
 
 
 @DatasetReader.register("conll2003")
@@ -103,11 +99,7 @@ class Conll2003DatasetReader(DatasetReader):
             if coding_scheme not in ("IOB1", "BIOUL"):
                 raise ConfigurationError("unknown coding_scheme: {}".format(coding_scheme))
 
-            if coding_scheme == "IOB1":
-                convert_to_coding_scheme = None
-            else:
-                convert_to_coding_scheme = coding_scheme
-
+            convert_to_coding_scheme = None if coding_scheme == "IOB1" else coding_scheme
         super().__init__(
             manual_distributed_sharding=True, manual_multiprocess_sharding=True, **kwargs
         )
